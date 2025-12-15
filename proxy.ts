@@ -1,21 +1,18 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/mentors(.*)',
+  '/how-it-works(.*)',
+  '/become-mentor(.*)',
+  '/about(.*)',
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();  // <-- IMPORTANT: await
-
-  const path = req.nextUrl.pathname;
-
-  // Public routes
-  const isPublic =
-    path === "/" ||
-    path.startsWith("/sign-in") ||
-    path.startsWith("/sign-up");
-
-  if (isPublic) return;
-
-  // Protect all other routes
-  if (!userId) {
-    return Response.redirect(new URL("/sign-in", req.url));
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
 });
 
