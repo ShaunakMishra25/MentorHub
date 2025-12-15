@@ -20,7 +20,7 @@ export default function Home() {
           </h1>
 
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto px-4">
-            Connect with top scorers and mentors who have cracked IIT JEE, NEET, CAT, UPSC and more. Get personalized guidance to achieve your goals.
+            Connect with top scorers and mentors who have cracked IIT JEE, NEET, CAT, UPSC and more. lund
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4">
