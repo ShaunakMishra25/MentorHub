@@ -1,13 +1,35 @@
-import { UserButton } from "@clerk/nextjs";
+"use client";
 
-export default function dashboard(){
-    return (
-        <div className="p-6">
-            <header className="flex justify-end">
-                <UserButton />
-            </header>
+import { useMentorOnboarding } from "@/lib/context/MentorOnboardingContext";
 
-            <h1 className="text-2xl font-bold mt-4">Mentor Dashboard</h1>
-        </div>
-    )
+export default function MentorDashboardPage() {
+  const { data } = useMentorOnboarding();
+
+  return (
+    <div className="p-6 space-y-6">
+
+      <h1 className="text-2xl font-bold">
+        Welcome, {data.basicInfo?.firstName ?? "Mentor"} 
+      </h1>
+
+      <div className="bg-white border rounded-xl p-4 space-y-2">
+        <p>
+          <strong>College:</strong>{" "}
+          {data.professionalInfo?.college ?? "-"}
+        </p>
+
+        <p>
+          <strong>Expertise:</strong>{" "}
+          {data.expertise?.subjects?.join(", ") ?? "-"}
+        </p>
+
+        <p>
+          <strong>Price:</strong>{" "}
+          {data.pricing?.pricePerSession
+            ? `₹${data.pricing.pricePerSession}`
+            : "-"}
+        </p>
+      </div>
+    </div>
+  );
 }
