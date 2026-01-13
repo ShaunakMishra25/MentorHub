@@ -43,15 +43,14 @@ export default function OnboardingLayoutWrapper({
         
         {/* Progress Bar (Desktop only, or sticky top?) - Request said "above form content" */}
         {/* We generally place it at the top of the main area for desktop. Mobile handles it in the header. */}
-        <div className="hidden lg:block px-8 pt-8 pb-4 bg-white z-10">
+        <div className="hidden lg:block px-8 pt-8 pb-4 bg-white z-10 flex-shrink-0">
              <ProgressBar currentStep={safeIndex} totalSteps={STEPS.length} />
         </div>
 
         {/* Scrollable Form Area */}
         {/* flex-1 and overflow-y-auto makes ONLY this section scroll */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth px-4 md:px-8 pb-8">
-          <div className="max-w-3xl mx-auto h-full"> 
-             {/* h-full ensures content can grow, but container handles scroll */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth px-4 md:px-8 pb-8 min-h-0">
+          <div className="max-w-3xl mx-auto"> 
              {children}
           </div>
         </div>
