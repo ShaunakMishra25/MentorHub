@@ -25,7 +25,7 @@ export default function OnboardingLayoutWrapper({
   const safeIndex = currentStepIndex === -1 ? 0 : currentStepIndex;
 
   return (
-    <div className="h-screen w-full bg-white overflow-hidden flex flex-col lg:flex-row">
+    <div className="fixed inset-0 w-full h-full bg-white overflow-hidden flex flex-col lg:flex-row">
       {/* Left Sidebar - Hidden on mobile, Flex on Desktop */}
       <OnboardingSidebar />
 
