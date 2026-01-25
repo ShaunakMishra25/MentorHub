@@ -1,5 +1,6 @@
 import Mentor from "../models/mentor.js";
 
+
 export const addSlot = async (req, res) => {
   const mentor = await Mentor.findById(req.user.id);
   mentor.freeSlots.push(req.body);

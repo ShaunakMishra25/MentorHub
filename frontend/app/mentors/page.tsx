@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { mockMentors, type MentorProfile } from "./mock";
+import { useState, useMemo, useEffect } from "react";
+import { type MentorProfile } from "./mock";
+import { fetchMentors } from "@/lib/api/mentors";
 import MentorCard from "@/components/ui/MentorCard";
 import SearchBar from "@/components/ui/SearchBar";
 import FiltersPanel from "@/components/ui/FiltersPanel";
@@ -17,7 +18,22 @@ interface FilterState {
 }
 
 export default function MentorsPage() {
-  const mentors: MentorProfile[] = Object.values(mockMentors);
+  const [mentors, setMentors] = useState<MentorProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getMentors = async () => {
+      try {
+        const data = await fetchMentors();
+        setMentors(data);
+      } catch (err) {
+        console.error("Failed to load mentors", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getMentors();
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -144,7 +160,11 @@ export default function MentorsPage() {
             </div>
 
             {/* Mentor Cards - Stacked Layout */}
-            {filteredMentors.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800"></div>
+              </div>
+            ) : filteredMentors.length === 0 ? (
               <div className="text-center py-16 px-4">
                 <div className="max-w-md mx-auto">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">

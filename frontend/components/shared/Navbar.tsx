@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { SignedIn, SignedOut, UserButton, ClerkLoading } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, ClerkLoading, useUser, SignUpButton } from "@clerk/nextjs";
 import { BookOpen } from "lucide-react";
 
 export default function Navbar() {
+  const { isSignedIn } = useUser();
+  const onboardingPath = "/onboarding/profile/basic-info";
+
   return (
     <nav className="bg-white border-b shadow- sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -27,13 +30,24 @@ export default function Navbar() {
             How it Works
             <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-blue-800 group-hover:w-full transition-all duration-500"></span>
           </Link>
-          <Link
-            href="/sign-up/mentor"
-            className="text-gray-700 hover:text-gray-900 relative group"
-          >
-            Become a Mentor
-            <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-blue-800 group-hover:w-full transition-all duration-500"></span>
-          </Link>
+          
+          {isSignedIn ? (
+            <Link
+              href={onboardingPath}
+              className="text-gray-700 hover:text-gray-900 relative group"
+            >
+              Become a Mentor
+              <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-blue-800 group-hover:w-full transition-all duration-500"></span>
+            </Link>
+          ) : (
+            <SignUpButton mode="modal" forceRedirectUrl={onboardingPath}>
+              <button className="text-gray-700 hover:text-gray-900 relative group cursor-pointer">
+                Become a Mentor
+                <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-blue-800 group-hover:w-full transition-all duration-500"></span>
+              </button>
+            </SignUpButton>
+          )}
+
           <Link href="/about" className="text-gray-700 hover:text-gray-900 relative group">
             About
             <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-blue-800 group-hover:w-full transition-all duration-500"></span>
