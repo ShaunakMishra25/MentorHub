@@ -1,18 +1,21 @@
 import { MentorProfile } from "@/app/mentors/mock";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = "https://mentorhub-backend-5gk6jbun2q-el.a.run.app";
 
 export const fetchMentors = async (): Promise<MentorProfile[]> => {
   try {
     const response = await fetch(`${BACKEND_URL}/api/mentors`);
-    
+
     if (!response.ok) {
-        console.warn(`Failed to fetch mentors from backend (${response.statusText}).`);
-        return [];
+      console.warn(`Failed to fetch mentors from backend (${response.statusText}).`);
+      return [];
     }
 
     const data = await response.json();
+
+
     console.log("Raw backend data:", data);
+
 
     // Map backend data to MentorProfile type
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,7 +40,7 @@ export const fetchMentors = async (): Promise<MentorProfile[]> => {
       attendance: mentor.totalSessions > 0 ? Math.round((mentor.completedSessions / mentor.totalSessions) * 100) : 100,
       responseTime: "Within 24 hours",
       pricing: mentor.pricing?.oneOnOne || 0,
-      availability: mentor.availability?.map((a: any) => 
+      availability: mentor.availability?.map((a: any) =>
         `${a.day} ${a.slots?.map((s: any) => `${s.startTime}-${s.endTime}`).join(", ")}`
       ) || [],
       testimonials: [], // Not in current response
@@ -49,6 +52,10 @@ export const fetchMentors = async (): Promise<MentorProfile[]> => {
     }));
   } catch (error) {
     console.error("Error fetching mentors:", error);
+
+    // Return empty array or rethrow depending on desired behavior
+    // For now returning empty array so the page doesn't crash completely
+
     return [];
   }
 };
