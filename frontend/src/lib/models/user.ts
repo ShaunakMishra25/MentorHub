@@ -30,6 +30,35 @@ const UserSchema = new mongoose.Schema({
     name: {
         type: String,
     },
+    mentorProfile: {
+        basicInfo: {
+            gender: String,
+            currentOrganisation: String,
+            industry: String,
+            currentRole: String,
+            workExperience: Number,
+            profilePhoto: String,
+        },
+        professionalInfo: {
+            highestQualification: String,
+            college: String,
+            branch: String,
+            passingYear: Number,
+        },
+        expertise: {
+            subjects: [String],
+            specializations: String,
+        },
+        availability: {
+            days: [String],
+            timeSlots: [String],
+        },
+        pricing: {
+            pricePerSession: Number,
+            sessionDuration: Number,
+            isFreeTrialEnabled: Boolean,
+        }
+    }
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);

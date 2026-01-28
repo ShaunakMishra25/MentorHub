@@ -1,27 +1,40 @@
 import { NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { connectDB } from "@/lib/db";
+import User from "@/lib/models/user";
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const user = await currentUser();
 
-    console.log("Received mentor onboarding data, forwarding to backend...");
-
-    const response = await fetch("http://localhost:5000/api/mentor/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Backend error:", errorText);
-      return NextResponse.json({ success: false, error: errorText }, { status: response.status });
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await response.json();
-    return NextResponse.json({ success: true, data: result });
+    const data = await req.json();
+
+    console.log("Received mentor onboarding data for user:", user.id);
+
+    await connectDB();
+
+    // Find the user and update their role and profile
+    const updatedUser = await User.findOneAndUpdate(
+      { clerkId: user.id },
+      {
+        $set: {
+          role: "mentor",
+          mentorProfile: data,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      console.error("User not found in database:", user.id);
+      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: updatedUser });
   } catch (error) {
     console.error("API Route Error:", error);
     return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
