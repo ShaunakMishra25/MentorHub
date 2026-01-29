@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { mockMentors, type MentorProfile } from "../../mentors/mock";
-import MentorCard from "@/components/ui/MentorCard";
+import SimpleMentorCard from "@/components/ui/SimpleMentorCard";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -18,23 +18,23 @@ export default function ExamPage({
   // Note: This is a simple filter based on the 'exam' string or 'subjects'.
   // We need to normalize the examId to match the mock data if necessary.
   // For now, let's assume examId maps somewhat to the 'exam' field or subjects.
-  
+
   const filteredMentors = mentors.filter((mentor) => {
     const normalizedExamId = examId.toLowerCase();
-    
+
     // Check if exam matches
     if (mentor.exam && mentor.exam.toLowerCase().includes(normalizedExamId)) {
-        return true;
+      return true;
     }
-    
+
     // Check if any subject matches
     if (mentor.subjects.some(sub => sub.toLowerCase().includes(normalizedExamId))) {
-        return true;
+      return true;
     }
 
     // Special case handling for 'iit-jee' -> 'jee'
     if (normalizedExamId === 'iit-jee' && (mentor.exam?.toLowerCase().includes('jee') || mentor.subjects.some(s => s.toLowerCase().includes('jee')))) {
-        return true;
+      return true;
     }
 
     return false;
@@ -47,13 +47,13 @@ export default function ExamPage({
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        
+
         {/* Back Link */}
         <div className="mb-6">
-            <Link href="/" className="inline-flex items-center text-gray-600 hover:text-orange-600 transition-colors">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
-            </Link>
+          <Link href="/" className="inline-flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
         </div>
 
         {/* Header */}
@@ -68,40 +68,46 @@ export default function ExamPage({
 
         {/* Content */}
         <div>
-            {/* Results Count */}
-            <div className="mb-6">
-              <p className="text-gray-600">
-                <span className="font-semibold text-gray-900">
-                  {filteredMentors.length}
-                </span>{" "}
-                {filteredMentors.length === 1 ? "mentor" : "mentors"} found
-              </p>
-            </div>
+          {/* Results Count */}
+          <div className="mb-6">
+            <p className="text-gray-600">
+              <span className="font-semibold text-gray-900">
+                {filteredMentors.length}
+              </span>{" "}
+              {filteredMentors.length === 1 ? "mentor" : "mentors"} found
+            </p>
+          </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMentors.length === 0 ? (
-                <div className="col-span-full text-center py-12 bg-white rounded-lg border border-gray-200">
-                  <p className="text-gray-500 text-lg">No mentors found for this exam yet.</p>
-                  <Link href="/mentors" className="text-orange-600 hover:underline mt-2 inline-block">
-                    Browse all mentors
-                  </Link>
-                </div>
-              ) : (
-                filteredMentors.map((mentor) => (
-                  <MentorCard
-                    key={mentor.id}
-                    mentor={{
-                      id: mentor.id,
-                      name: mentor.name,
-                      pricing: mentor.pricing,
-                      tagLine: mentor.tagLine,
-                      bio: mentor.bio,
-                    }}
-                  />
-                ))
-              )}
-            </div>
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMentors.length === 0 ? (
+              <div className="col-span-full text-center py-12 bg-white rounded-lg border border-gray-200">
+                <p className="text-gray-500 text-lg">No mentors found for this exam yet.</p>
+                <Link href="/mentors" className="text-orange-600 hover:underline mt-2 inline-block">
+                  Browse all mentors
+                </Link>
+              </div>
+            ) : (
+              filteredMentors.map((mentor) => (
+                <SimpleMentorCard
+                  key={mentor.id}
+                  mentor={{
+                    id: mentor.id,
+                    name: mentor.name,
+                    pricing: mentor.pricing,
+                    tagLine: mentor.tagLine,
+                    bio: mentor.bio,
+                    rating: mentor.rating,
+                    reviewsCount: mentor.reviewsCount,
+                    sessions: mentor.sessions,
+                    yearsOfExperience: mentor.yearsOfExperience,
+                    attendance: mentor.attendance,
+                    imageUrl: mentor.profilePhoto,
+                  }}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

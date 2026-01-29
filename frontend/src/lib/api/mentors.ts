@@ -18,6 +18,7 @@ export const fetchMentors = async (): Promise<MentorProfile[]> => {
     const response = await fetch(`${baseUrl}/api/mentors`, { cache: 'no-store' });
 
     if (!response.ok) {
+      
       console.warn(`Failed to fetch mentors from backend (${response.status} ${response.statusText}).`);
       const errorText = await response.text();
       console.error("Error response body:", errorText.slice(0, 500));

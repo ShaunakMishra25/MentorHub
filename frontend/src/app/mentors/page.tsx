@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { type MentorProfile } from "./mock";
 import { fetchMentors } from "@/lib/api/mentors";
-import MentorCard from "@/components/ui/MentorCard";
+import SimpleMentorCard from "@/components/ui/SimpleMentorCard";
 import SearchBar from "@/components/ui/SearchBar";
 import FiltersPanel from "@/components/ui/FiltersPanel";
 import FiltersAccordion from "@/components/ui/FiltersAccordion";
@@ -192,26 +192,26 @@ export default function MentorsPage() {
               </div>
             ) : (
               <>
-                <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedMentors.map((mentor) => (
-                    <MentorCard
+                    <SimpleMentorCard
                       key={mentor.id}
                       mentor={{
                         id: mentor.id,
                         name: mentor.name,
-                        pricing: mentor.pricing,
                         tagLine: mentor.tagLine,
                         bio: mentor.bio,
                         rating: mentor.rating,
                         reviewsCount: mentor.reviewsCount,
-                        college: mentor.college,
-                        exam: mentor.exam,
-                        rank: mentor.rank,
-                        yearsOfExperience: mentor.yearsOfExperience,
                         sessions: mentor.sessions,
-                        attendance: mentor.attendance,
-                        imageUrl: mentor.profilePhoto,
-                        offerings: mentor.offerings,
+                        imageUrl: mentor.profilePhoto, // Map profilePhoto to imageUrl
+                        pricing: mentor.pricing, // Added
+                        offerings: mentor.offerings, // Added
+                        attendance: mentor.attendance, // Added
+                        yearsOfExperience: mentor.yearsOfExperience, // Added
+                        college: mentor.college, // Added
+                        exam: mentor.exam, // Added
+                        rank: mentor.rank, // Added
                       }}
                     />
                   ))}
