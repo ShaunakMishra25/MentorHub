@@ -204,7 +204,6 @@ export default function MentorsPage() {
                         rating: mentor.rating,
                         reviewsCount: mentor.reviewsCount,
                         sessions: mentor.sessions,
-                        imageUrl: mentor.profilePhoto, // Map profilePhoto to imageUrl
                         pricing: mentor.pricing, // Added
                         offerings: mentor.offerings, // Added
                         attendance: mentor.attendance, // Added

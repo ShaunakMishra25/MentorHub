@@ -50,7 +50,7 @@ export default function ExamPage({
 
         {/* Back Link */}
         <div className="mb-6">
-          <Link href="/" className="inline-flex items-center text-gray-600 hover:text-orange-600 transition-colors">
+          <Link href="/" className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
@@ -59,7 +59,7 @@ export default function ExamPage({
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Mentors for <span className="text-orange-600">{formatExamName(examId)}</span>
+            Mentors for <span className="text-blue-600">{formatExamName(examId)}</span>
           </h1>
           <p className="text-gray-600">
             Find the best mentors to guide you for your {formatExamName(examId)} preparation.
@@ -83,7 +83,7 @@ export default function ExamPage({
             {filteredMentors.length === 0 ? (
               <div className="col-span-full text-center py-12 bg-white rounded-lg border border-gray-200">
                 <p className="text-gray-500 text-lg">No mentors found for this exam yet.</p>
-                <Link href="/mentors" className="text-orange-600 hover:underline mt-2 inline-block">
+                <Link href="/mentors" className="text-blue-600 hover:underline mt-2 inline-block">
                   Browse all mentors
                 </Link>
               </div>
@@ -102,7 +102,6 @@ export default function ExamPage({
                     sessions: mentor.sessions,
                     yearsOfExperience: mentor.yearsOfExperience,
                     attendance: mentor.attendance,
-                    imageUrl: mentor.profilePhoto,
                   }}
                 />
               ))

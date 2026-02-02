@@ -1,14 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Briefcase, Users, TrendingUp, Star, MessageCircle } from "lucide-react";
+import { BadgeCheck, Briefcase, Users, TrendingUp, Star, MessageCircle, User } from "lucide-react";
 import TagBadge from "./TagBadge";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { Button } from "@/shared/ui/button";
 
 type MentorCardData = {
   id: string;
-  name: string;
+  name?: string;
   isVerified?: boolean;
   pricing?: number;
   tagLine?: string;
@@ -22,7 +23,6 @@ type MentorCardData = {
   sessions?: number;
   attendance?: number;
   responseTime?: string;
-  imageUrl?: string;
   offerings?: {
     id: string;
     title: string;
@@ -32,15 +32,18 @@ type MentorCardData = {
   }[];
 };
 
-const DEFAULT_AVATAR = "/images/default-avatar.png";
+interface SimpleMentorCardProps {
+  mentor?: MentorCardData;
+  isLoading?: boolean;
+}
 
 export default function SimpleMentorCard({
   mentor,
-}: {
-  mentor: MentorCardData;
-}) {
+  isLoading = false,
+}: SimpleMentorCardProps) {
+
   const badges = useMemo(() => {
-    if (!mentor.tagLine) return [];
+    if (!mentor?.tagLine) return [];
 
     return mentor.tagLine
       .split("|")
@@ -55,127 +58,112 @@ export default function SimpleMentorCard({
             ? "secondary"
             : "accent") as "primary" | "secondary" | "accent",
       }));
-  }, [mentor.tagLine]);
+  }, [mentor?.tagLine]);
 
-  const [imageSrc, setImageSrc] = useState(
-    mentor.imageUrl || DEFAULT_AVATAR
-  );
+  if (isLoading || !mentor) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+        <Skeleton className="h-12 w-full" />
+        <div className="flex justify-between items-center pt-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="group bg-white rounded-2xl border-2 border-gray-200 hover:border-orange-300 hover:shadow-xl transition-all duration-300 overflow-hidden">
-      {/* Image */}
-      <Link href={`/mentors/${mentor.id}`} className="block">
-        <div className="relative aspect-[3/2] w-full overflow-hidden">
-          <Image
-            src={imageSrc}
-            alt={`${mentor.name}'s profile photo`}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={() => setImageSrc(DEFAULT_AVATAR)}
-          />
+    <div className="group bg-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full">
 
+      <div className="p-5 flex-grow flex flex-col">
+        <div className="flex items-start justify-between mb-4">
+          <Link href={`/mentors/${mentor.id}`} className="flex items-center gap-3 group-hover:opacity-100 transition-opacity">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 overflow-hidden">
+                <User className="w-8 h-8 text-gray-400" />
+              </div>
+              {mentor.isVerified && (
+                <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
+                  <BadgeCheck className="w-5 h-5 text-blue-600 fill-white" />
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                {mentor.name}
+              </h3>
+              <p className="text-sm text-gray-500 font-medium">{mentor.college || "Top Mentor"}</p>
+            </div>
+          </Link>
           {mentor.rating !== undefined && (
-            <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm shadow-lg px-2 py-1 rounded-lg flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
-              <span className="text-xs font-bold text-gray-900">
+            <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded text-green-700 border border-green-100">
+              <span className="text-xs font-bold">
                 {mentor.rating.toFixed(1)}
               </span>
+              <Star className="w-3 h-3 fill-green-700 text-green-700" />
             </div>
-          )}
-        </div>
-      </Link>
-
-      {/* Content */}
-      <div className="p-4">
-        {/* Name */}
-        <div className="flex items-center gap-2 mb-2">
-          <Link href={`/mentors/${mentor.id}`}>
-            <h3 className="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1">
-              {mentor.name}
-            </h3>
-          </Link>
-
-          {mentor.isVerified && (
-            <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500 flex-shrink-0" />
           )}
         </div>
 
         {/* Credentials */}
         {badges.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {badges.map((badge, index) => (
-              <TagBadge
-                key={index}
-                text={badge.text}
-                variant={badge.variant}
-              />
+              <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                {badge.text}
+              </span>
             ))}
           </div>
         )}
 
         {/* Bio */}
-        <p className="text-xs text-gray-600 line-clamp-2 mb-3 leading-relaxed">
+        <p className="text-sm text-gray-600 line-clamp-2 mb-auto leading-relaxed">
           {mentor.bio}
         </p>
 
-        {/* Meta */}
-        <div className="flex items-center gap-3 mb-3 text-xs text-gray-500 flex-wrap">
-          {mentor.yearsOfExperience !== undefined && (
-            <div className="flex items-center gap-1">
-              <Briefcase className="w-3 h-3" />
-              <span>{mentor.yearsOfExperience}y</span>
-            </div>
-          )}
+        {/* Divider */}
+        <div className="my-4 border-t border-gray-100" />
 
-          {mentor.sessions !== undefined && (
-            <div className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              <span>{mentor.sessions}</span>
-            </div>
-          )}
-
-          {mentor.attendance !== undefined && (
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-green-500" />
-              <span className="text-green-600">
-                {mentor.attendance}%
-              </span>
-            </div>
-          )}
+        {/* Meta Grid */}
+        <div className="grid grid-cols-2 gap-y-2 text-xs text-gray-500 mb-2">
+          <div className="flex items-center gap-1.5">
+            <Briefcase className="w-3.5 h-3.5 text-gray-400" />
+            <span>{mentor.yearsOfExperience ?? 0}+ Years Exp.</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-gray-400" />
+            <span>{mentor.sessions ?? 0} Sessions</span>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div>
-            <span className="text-xs text-gray-500">
-              Starting at
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 bg-gray-50 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">Session Price</p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg font-bold text-blue-600">
+              ₹{mentor.pricing ?? 500}
             </span>
-            <div className="flex items-baseline gap-0.5">
-              <span className="text-lg font-bold text-gray-900">
-                ₹{mentor.pricing ?? 1000}
-              </span>
-              <span className="text-xs text-gray-500">/hr</span>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              aria-label="Send message"
-              className="p-2 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-            </button>
-
-            <Link
-              href={`/mentors/${mentor.id}`}
-              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-semibold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm"
-            >
-              Book
-            </Link>
+            <span className="text-xs text-gray-400">/ session</span>
           </div>
         </div>
+
+        <Link href={`/mentors/${mentor.id}`}>
+          <Button size="sm" className="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 font-semibold shadow-sm">
+            View Profile
+          </Button>
+        </Link>
       </div>
     </div>
   );
 }
+

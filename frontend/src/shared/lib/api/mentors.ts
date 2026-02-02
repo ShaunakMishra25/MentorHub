@@ -1,6 +1,6 @@
 import { mockMentors, MentorProfile } from "@/app/(public)/mentors/mock";
 
-// const BACKEND_URL = "https://mentorhub-backend-5gk6jbun2q-el.a.run.app";
+// const BACKEND_URL = "https://mentomania-backend-5gk6jbun2q-el.a.run.app";
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return "";
