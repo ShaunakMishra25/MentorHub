@@ -15,26 +15,26 @@ type Feature = {
 
 const features: Feature[] = [
     {
-        title: "Talk to Toppers Anytime",
-        description: "Chat, call, or video with toppers who've cracked it themselves - get prep hacks, exam strategy, and real guidance anytime, anywhere.",
+        title: "Talk to Serving Officers",
+        description: "Chat, call, or video with IAS, IPS, and IRS officers who've cracked it themselves - get prep hacks, exam strategy, and real guidance.",
         icon: GraduationCap,
         position: "left",
     },
     {
-        title: "Clear Doubts with Subject Experts",
-        description: "Stuck in Physics, Chemistry, Math, or Biology? Connect 1:1 with experienced academic mentors who'll explain concepts and solve your doubts instantly.",
+        title: "Clear Doubts with Experts",
+        description: "Stuck in Polity, Economy, Ethics, or Essay? Connect 1:1 with subject matter experts who'll explain concepts and review your answers.",
         icon: Scan,
         position: "right",
     },
     {
-        title: "Stay Motivated & Exam-Ready",
-        description: "Beat stress, procrastination, and self-doubt with mentors who've been in your shoes and know how to keep you focused till exam day.",
+        title: "Stay Motivated & Disciplined",
+        description: "Beat burn-out and procrastination with mentors who have faced the rigorous cycle of Prelims-Mains-Interview.",
         icon: Headphones,
         position: "left",
     },
     {
         title: "Plan Smarter, Not Harder",
-        description: "From backlog management to daily scheduling - get a study plan that balances school, coaching, and self-study without burning out.",
+        description: "From decoding the syllabus to daily scheduling - get a study plan that covers GS, Optional, and Current Affairs efficiently.",
         icon: Waypoints,
         position: "right",
     }

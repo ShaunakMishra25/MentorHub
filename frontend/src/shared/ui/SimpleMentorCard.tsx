@@ -23,6 +23,13 @@ type MentorCardData = {
   sessions?: number;
   attendance?: number;
   responseTime?: string;
+
+  // New Govt Fields
+  service?: string;
+  posting?: string;
+  attempts?: number;
+  optionalSubject?: string;
+
   offerings?: {
     id: string;
     title: string;
@@ -43,22 +50,23 @@ export default function SimpleMentorCard({
 }: SimpleMentorCardProps) {
 
   const badges = useMemo(() => {
-    if (!mentor?.tagLine) return [];
+    if (!mentor) return [];
 
-    return mentor.tagLine
-      .split("|")
-      .map((p) => p.trim())
-      .filter(Boolean)
-      .slice(0, 3)
-      .map((text, index) => ({
-        text,
-        variant: (index === 0
-          ? "primary"
-          : index === 1
-            ? "secondary"
-            : "accent") as "primary" | "secondary" | "accent",
-      }));
-  }, [mentor?.tagLine]);
+    // Priority: Service > Exam > Rank > College
+    const items = [];
+
+    if (mentor.service) items.push({ text: mentor.service, variant: "primary" });
+    else if (mentor.exam) items.push({ text: mentor.exam, variant: "primary" });
+
+    if (mentor.posting) items.push({ text: mentor.posting, variant: "secondary" });
+    else if (mentor.rank) items.push({ text: `AIR ${mentor.rank}`, variant: "secondary" });
+
+    // Fallback/Third badge
+    if (mentor.attempts) items.push({ text: `${mentor.attempts}${mentor.attempts === 1 ? 'st' : 'nd'} Attempt`, variant: "accent" });
+    else if (mentor.college) items.push({ text: mentor.college, variant: "accent" });
+
+    return items.slice(0, 3) as { text: string; variant: "primary" | "secondary" | "accent" }[];
+  }, [mentor]);
 
   if (isLoading || !mentor) {
     return (
@@ -80,7 +88,7 @@ export default function SimpleMentorCard({
   }
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full">
+    <div className="group bg-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col h-full">
 
       <div className="p-5 flex-grow flex flex-col">
         <div className="flex items-start justify-between mb-4">
@@ -99,7 +107,13 @@ export default function SimpleMentorCard({
               <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                 {mentor.name}
               </h3>
-              <p className="text-sm text-gray-500 font-medium">{mentor.college || "Top Mentor"}</p>
+              <p className="text-sm text-gray-500 font-medium">
+                {mentor.service ? (
+                  <span className="text-blue-700 font-semibold">{mentor.service} Officer</span>
+                ) : (
+                  mentor.college || "Top Mentor"
+                )}
+              </p>
             </div>
           </Link>
           {mentor.rating !== undefined && (
@@ -141,6 +155,12 @@ export default function SimpleMentorCard({
             <Users className="w-3.5 h-3.5 text-gray-400" />
             <span>{mentor.sessions ?? 0} Sessions</span>
           </div>
+          {mentor.optionalSubject && (
+            <div className="flex items-center gap-1.5 col-span-2">
+              <MessageCircle className="w-3.5 h-3.5 text-gray-400" />
+              <span>Optional: {mentor.optionalSubject}</span>
+            </div>
+          )}
         </div>
 
       </div>

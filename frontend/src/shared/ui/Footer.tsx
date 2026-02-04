@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { BookOpen, Twitter, Linkedin, Instagram, Send } from 'lucide-react';
 
 export default function Footer() {
@@ -45,11 +46,17 @@ export default function Footer() {
                     {/* Brand Column */}
                     <div className="col-span-1 md:col-span-1 space-y-6">
                         <Link href="/" className="flex items-center space-x-2">
-                            <div className="bg-blue-600/10 p-2 rounded-lg border border-blue-600/20">
-                                <BookOpen className="w-6 h-6 text-blue-500" />
+                            <div className="bg-blue-600/10 p-1 rounded-lg border border-blue-600/20">
+                                <Image
+                                    src="/logo.png"
+                                    alt="MentoMania Logo"
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 object-contain"
+                                />
                             </div>
-                            <span className="font-bold text-xl text-white tracking-tight">
-                                Mento<span className="text-blue-500">Mania</span>
+                            <span className="font-bold text-xl text-white tracking-tight pt-1">
+                                ento<span className="text-blue-500">Mania</span>
                             </span>
                         </Link>
                         <p className="text-sm leading-relaxed text-slate-400">

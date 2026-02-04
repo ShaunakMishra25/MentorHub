@@ -108,14 +108,14 @@ export default function MentorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white">
+      <div className="max-w-7xl mx-auto px-4 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
-            Find Your Perfect <span className="text-orange-600">Mentor</span>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-4">
+            Find Your Perfect <span className="text-blue-600">Mentor</span>
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Connect with industry experts and accelerate your career
           </p>
         </div>
@@ -149,6 +149,9 @@ export default function MentorsPage() {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0">
+
+
+
             {/* Results Count - Desktop only */}
             <div className="hidden xl:block mb-6">
               <p className="text-gray-600">
@@ -225,9 +228,11 @@ export default function MentorsPage() {
               </>
             )}
           </main>
+
+
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

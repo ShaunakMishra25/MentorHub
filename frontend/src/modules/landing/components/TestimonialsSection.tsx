@@ -8,34 +8,31 @@ const testimonials = [
     {
         id: 1,
         name: "Rahul Verma",
-        role: "JEE Aspirant",
-        rating: 4,
-        quote: "The personal mentorship from IIT toppers on Mentomania helped me transform my JEE preparation. It felt like having a personal coach.",
+        role: "UPSC Aspirant",
+        rating: 5,
+        quote: "Answer writing was my biggest weakness. Regular feedback from a rank holder gave me the confidence I needed to ace the Mains.",
         initial: "R",
         color: "bg-blue-100 text-blue-600"
     },
     {
         id: 2,
         name: "Neha Singh",
-        role: "CLAT Aspirant",
-        rating: 4,
-        quote: "CLAT doubts used to slow me down. But my Mentomania mentor simplified even the trickiest concepts - it made a huge difference in my rank.",
+        role: "SSC CGL Aspirant",
+        rating: 5,
+        quote: "Maths shortcuts showed by my mentor saved me valuable time in the exam. I improved my score from 120 to 165.",
         initial: "N",
         color: "bg-purple-100 text-purple-600"
     },
     {
         id: 3,
         name: "Vikram Singh",
-        role: "UPSC Aspirant",
+        role: "SBI PO Aspirant",
         rating: 5,
-        quote: "Answer writing was my biggest weakness. Regular feedback from a rank holder gave me the confidence I needed to ace the Mains.",
+        quote: "The interview guidance session was a game changer. My mentor told me exactly what to expect from the panel.",
         initial: "V",
-        color: "bg-orange-100 text-orange-600" // Kept for variety, though mostly blue theme preferred, removed orange accents elsewhere but specific user avatars can be colorful? User asked for strictly blue theme. I will change to indigo.
+        color: "bg-indigo-100 text-indigo-600"
     }
 ];
-
-// Correcting color for user 3 to allow consistent theme
-testimonials[2].color = "bg-indigo-100 text-indigo-600";
 
 
 export default function TestimonialsSection() {
