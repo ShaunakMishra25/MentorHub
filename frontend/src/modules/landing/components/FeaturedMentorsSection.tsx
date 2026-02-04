@@ -17,18 +17,28 @@ export default function FeaturedMentorsSection() {
     }, []);
 
     return (
-        <section className="py-12 md:py-20 bg-gray-50">
-            <div className="container mx-auto px-4">
+        <section className="py-6 md:py-10 bg-gradient-to-b from-gray-50 via-white to-white relative overflow-hidden">
+            {/* Ambient Background Blob */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl opacity-60 mix-blend-multiply filter" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-orange-50/50 rounded-full blur-3xl opacity-60 mix-blend-multiply filter" />
+            </div>
+
+            <div className="container mx-auto px-4 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                     <div>
-                        <motion.span
-                            initial={{ opacity: 0, y: 10 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="text-blue-600 font-semibold tracking-wide uppercase text-sm"
-                        >
-                            Top Rated
-                        </motion.span>
+                        <div className="relative inline-block">
+                            <motion.span
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="text-blue-600 font-semibold tracking-wide uppercase text-sm relative z-10"
+                            >
+                                Top Rated
+                            </motion.span>
+                            <div className="absolute -inset-2 bg-blue-100/50 rounded-lg blur-md -z-0"></div>
+                        </div>
+
                         <motion.h2
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}

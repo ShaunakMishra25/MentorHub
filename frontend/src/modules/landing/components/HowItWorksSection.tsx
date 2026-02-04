@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react'
 
 export default function HowItWorksSection() {
     return (
-        <section className="py-24 bg-white">
+        <section className="py-12 bg-white">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
                     <motion.span

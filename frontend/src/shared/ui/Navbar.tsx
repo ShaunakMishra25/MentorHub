@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { SignedIn, SignedOut, UserButton, ClerkLoading, useUser, SignUpButton, SignInButton } from "@clerk/nextjs";
+import Image from "next/image";
 import { BookOpen, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,7 +87,7 @@ export default function Navbar() {
         className={cn(
           "fixed z-50 border-b transition-[background-color,box-shadow,backdrop-filter] duration-200",
           isScrolledState
-            ? "top-0 left-0 right-0 w-full rounded-none bg-white/80 backdrop-blur-md border-gray-200/50 shadow-sm py-3 md:top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[95%] md:max-w-5xl md:rounded-2xl md:shadow-lg md:py-2" // Hybrid Docking State
+            ? "top-0 left-0 right-0 w-full rounded-none bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] py-3 md:top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[95%] md:max-w-5xl md:rounded-2xl md:py-2 supports-[backdrop-filter]:bg-white/10" // Hybrid Docking State
             : "top-0 left-0 right-0 w-full rounded-none bg-transparent border-transparent py-4", // Top State or Menu Open
           isMobileMenuOpen && "bg-white border-gray-100" // Force solid background when menu is open
         )}
@@ -97,10 +98,16 @@ export default function Navbar() {
             isScrolledState ? "w-full md:w-full" : "max-w-7xl"
           )}
         >
-          <Link href="/" className="flex items-center space-x-2" onClick={closeMenu}>
-            <BookOpen className="w-8 h-8 text-blue-600" />
-            <span className="font-bold text-xl text-gray-900">
-              Mento<span className="text-blue-600">Mania</span>
+          <Link href="/" className="flex items-center -ml-2" onClick={closeMenu}>
+            <Image
+              src="/logo.png"
+              alt="MentoMania Logo"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain -mt-2"
+            />
+            <span className="font-bold text-2xl text-gray-900 -ml-1.5 pt-1">
+              ento<span className="text-blue-600">Mania</span>
             </span>
           </Link>
 
