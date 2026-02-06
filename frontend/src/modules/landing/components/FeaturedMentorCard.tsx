@@ -132,7 +132,7 @@ export default function FeaturedMentorCard({
                             size="sm"
                             className="bg-white text-blue-600 border border-blue-200 hover:bg-blue-50 hover:border-blue-300 font-semibold shadow-sm"
                         >
-                            View Profile
+                            Book Session
                         </Button>
                     </Link>
                 </div>
