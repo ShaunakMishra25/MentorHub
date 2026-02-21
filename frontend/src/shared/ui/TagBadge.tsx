@@ -7,8 +7,8 @@ interface TagBadgeProps {
 
 export default function TagBadge({ text, variant = "primary" }: TagBadgeProps) {
   const variantStyles = {
-    primary: "bg-blue-50 text-blue-700 border-blue-200",
-    secondary: "bg-orange-50 text-orange-700 border-orange-200",
+    primary: "bg-gray-50 text-gray-700 border-gray-200",
+    secondary: "bg-gray-50 text-gray-700 border-gray-200",
     accent: "bg-gray-50 text-gray-700 border-gray-200",
   };
 

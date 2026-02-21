@@ -31,7 +31,7 @@ export default function SearchBar({
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors duration-200 text-gray-900 placeholder-gray-400"
+        className="w-full pl-12 pr-4 py-3.5 border-2 border-border-subtle bg-surface-background rounded-xl focus:border-blue-500 focus:outline-none transition-colors duration-200 text-foreground placeholder-gray-400"
       />
     </div>
   );

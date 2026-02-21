@@ -9,6 +9,7 @@ interface FilterState {
   subject: string;
   exam: string;
   minRating: string;
+  isTopMentor: boolean;
 }
 
 interface FiltersPanelProps {
@@ -29,6 +30,7 @@ export default function FiltersPanel({
       subject: "",
       exam: "",
       minRating: "",
+      isTopMentor: false,
     });
   };
 
@@ -44,10 +46,10 @@ export default function FiltersPanel({
   const maxPrice = filters.maxHourlyRate ? parseInt(filters.maxHourlyRate) : 5000;
 
   return (
-    <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 space-y-6 shadow-sm">
+    <div className="bg-surface-background border-2 border-border-subtle rounded-2xl p-6 space-y-6 shadow-soft">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-        <h3 className="font-bold text-lg text-gray-900">Filters</h3>
+      <div className="flex items-center justify-between pb-4 border-b border-border-subtle">
+        <h3 className="text-lg">Filters</h3>
         <span className="text-sm font-semibold text-blue-600">
           {mentorCount} {mentorCount === 1 ? "mentor" : "mentors"}
         </span>
@@ -89,7 +91,7 @@ export default function FiltersPanel({
           onChange={(e) =>
             onFiltersChange({ ...filters, subject: e.target.value })
           }
-          className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+          className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
         >
           <option value="">All Subjects</option>
           <option value="General Studies">General Studies</option>
@@ -118,7 +120,7 @@ export default function FiltersPanel({
           onChange={(e) =>
             onFiltersChange({ ...filters, exam: e.target.value })
           }
-          className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+          className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
         >
           <option value="">All Exams</option>
           <option value="UPSC CSE">UPSC CSE</option>
@@ -144,7 +146,7 @@ export default function FiltersPanel({
           onChange={(e) =>
             onFiltersChange({ ...filters, minRating: e.target.value })
           }
-          className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+          className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
         >
           <option value="">Any Rating</option>
           <option value="4.5">4.5★ & above</option>
@@ -156,7 +158,7 @@ export default function FiltersPanel({
       {/* Reset Button */}
       <button
         onClick={handleReset}
-        className="w-full mt-4 px-4 py-2.5 text-sm font-semibold text-gray-600 bg-gray-50 border-2 border-gray-200 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-all duration-200"
+        className="w-full mt-4 px-4 py-2.5 text-sm font-semibold text-gray-600 bg-gray-50 border-2 border-border-subtle rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-all duration-200"
       >
         Reset Filters
       </button>

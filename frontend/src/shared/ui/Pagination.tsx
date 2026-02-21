@@ -57,7 +57,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex items-center gap-1 px-3 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200 transition-all duration-200"
+        className="flex items-center gap-1 px-3 py-2 rounded-lg border-2 border-border-subtle text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface-background disabled:hover:border-border-subtle transition-all duration-200"
       >
         <ChevronLeft className="w-4 h-4" />
         <span className="hidden sm:inline">Previous</span>
@@ -84,11 +84,10 @@ export default function Pagination({
             <button
               key={pageNum}
               onClick={() => onPageChange(pageNum)}
-              className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                isActive
+              className={`min-w-[40px] px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
                   ? "bg-blue-600 text-white border-2 border-blue-600 shadow-sm"
-                  : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
-              }`}
+                  : "bg-surface-background text-gray-700 border-2 border-border-subtle hover:bg-gray-50 hover:border-gray-300"
+                }`}
             >
               {pageNum}
             </button>
@@ -100,7 +99,7 @@ export default function Pagination({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex items-center gap-1 px-3 py-2 rounded-lg border-2 border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-200 transition-all duration-200"
+        className="flex items-center gap-1 px-3 py-2 rounded-lg border-2 border-border-subtle text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-surface-background disabled:hover:border-border-subtle transition-all duration-200"
       >
         <span className="hidden sm:inline">Next</span>
         <ChevronRight className="w-4 h-4" />

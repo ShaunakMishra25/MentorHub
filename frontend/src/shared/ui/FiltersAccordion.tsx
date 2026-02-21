@@ -9,6 +9,7 @@ interface FilterState {
   subject: string;
   exam: string;
   minRating: string;
+  isTopMentor: boolean;
 }
 
 interface FiltersAccordionProps {
@@ -31,18 +32,19 @@ export default function FiltersAccordion({
       subject: "",
       exam: "",
       minRating: "",
+      isTopMentor: false,
     });
   };
 
   return (
-    <div className="bg-white border-2 border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-surface-background border-2 border-border-subtle rounded-2xl shadow-soft overflow-hidden">
       {/* Accordion Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors duration-200"
       >
         <div className="flex items-center gap-3">
-          <h3 className="font-bold text-base text-gray-900">Filters</h3>
+          <h3 className="text-base">Filters</h3>
           <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
             {mentorCount} {mentorCount === 1 ? "mentor" : "mentors"}
           </span>
@@ -59,7 +61,7 @@ export default function FiltersAccordion({
         className={`transition-all duration-300 ease-in-out ${isOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
           } overflow-hidden`}
       >
-        <div className="p-4 pt-0 space-y-4 border-t border-gray-100">
+        <div className="p-4 pt-0 space-y-4 border-t border-border-subtle">
           {/* Min Hourly Rate */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -72,7 +74,7 @@ export default function FiltersAccordion({
                 onFiltersChange({ ...filters, minHourlyRate: e.target.value })
               }
               placeholder="e.g. 500"
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200"
+              className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
           </div>
 
@@ -88,7 +90,7 @@ export default function FiltersAccordion({
                 onFiltersChange({ ...filters, maxHourlyRate: e.target.value })
               }
               placeholder="e.g. 2000"
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200"
+              className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200"
             />
           </div>
 
@@ -102,7 +104,7 @@ export default function FiltersAccordion({
               onChange={(e) =>
                 onFiltersChange({ ...filters, subject: e.target.value })
               }
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+              className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
             >
               <option value="">All Subjects</option>
               <option value="General Studies">General Studies</option>
@@ -131,7 +133,7 @@ export default function FiltersAccordion({
               onChange={(e) =>
                 onFiltersChange({ ...filters, exam: e.target.value })
               }
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+              className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
             >
               <option value="">All Exams</option>
               <option value="UPSC CSE">UPSC CSE</option>
@@ -157,7 +159,7 @@ export default function FiltersAccordion({
               onChange={(e) =>
                 onFiltersChange({ ...filters, minRating: e.target.value })
               }
-              className="w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-white"
+              className="w-full border-2 border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none transition-colors duration-200 bg-surface-background"
             >
               <option value="">Any Rating</option>
               <option value="4.5">4.5★ & above</option>

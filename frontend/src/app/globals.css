@@ -85,11 +85,13 @@ body {
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --color-app-background: var(--app-background);
+  --color-surface-background: var(--surface-background);
+  --color-border-subtle: var(--border-subtle);
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--app-background);
   color: var(--foreground);
 }
 
@@ -164,6 +166,14 @@ body {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* MentorHub Global Design Tokens */
+  --app-background: oklch(0.985 0.003 260);
+  /* Slate 50-ish */
+  --surface-background: oklch(1 0 0);
+  /* White */
+  --border-subtle: oklch(0.89 0.006 270);
+  /* Light subtle border roughly gray-200 */
 }
 
 @layer base {
@@ -172,15 +182,26 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-app-background text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight text-foreground;
   }
 }
 
 @layer utilities {
+
   /* Two reusable shadow tokens — use these everywhere, nothing else */
   .shadow-soft {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   }
+
   .shadow-floating {
     box-shadow: 0 4px 16px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04);
   }
