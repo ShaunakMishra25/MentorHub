@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -152,282 +152,266 @@ export default function AuthFormsCard({ initialView }: AuthFormsCardProps) {
     const inputClass = "w-full h-[50px] pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1DA1F2]/25 focus:border-[#1DA1F2] transition-all duration-200 text-sm";
 
     return (
-        <LayoutGroup id="auth-accordion">
-            <motion.div layout transition={{ duration: 0.55, ease: EASE }} className="w-full space-y-3">
+        <div className="w-full space-y-3">
 
-                {/* ===== SIGN IN ACCORDION CARD ===== */}
-                <motion.div
-                    layout
-                    transition={{ duration: 0.55, ease: EASE }}
-                    className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${isSignIn
-                        ? "border-[#1DA1F2]/30 shadow-[0_0_0_3px_rgba(29,161,242,0.08)] bg-white"
-                        : "border-slate-200 bg-white/70"
-                        }`}
+            {/* ===== SIGN IN ACCORDION CARD ===== */}
+            <motion.div
+                transition={{ duration: 0.55, ease: EASE }}
+                className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${isSignIn
+                    ? "border-[#1DA1F2]/30 shadow-[0_0_0_3px_rgba(29,161,242,0.08)] bg-white"
+                    : "border-slate-200 bg-white/70"
+                    }`}
+            >
+                {/* Card Header - always visible */}
+                <button
+                    type="button"
+                    onClick={() => switchView("sign-in")}
+                    className="w-full flex items-center justify-between px-6 py-4 cursor-pointer group"
                 >
-                    {/* Card Header - always visible */}
-                    <button
-                        type="button"
-                        onClick={() => switchView("sign-in")}
-                        className="w-full flex items-center justify-between px-6 py-4 cursor-pointer group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <motion.div
-                                animate={{ scale: isSignIn ? 1 : 0.85, opacity: isSignIn ? 1 : 0.5 }}
-                                transition={{ duration: 0.3, ease: EASE }}
-                                className="w-8 h-8 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2] font-bold text-sm shrink-0"
-                            >
-                                1
-                            </motion.div>
-                            <div className="text-left">
-                                <p className={`font-semibold text-[15px] transition-colors duration-200 ${isSignIn ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700"}`}>
-                                    Sign In
-                                </p>
-                                {!isSignIn && (
-                                    <p className="text-xs text-slate-400 mt-0.5">Already have an account?</p>
-                                )}
-                            </div>
+                    <div className="flex items-center gap-3">
+
+                        <div className="text-left">
+                            <p className={`font-semibold text-[15px] transition-colors duration-200 ${isSignIn ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700"}`}>
+                                Sign In
+                            </p>
+                            {!isSignIn && (
+                                <p className="text-xs text-slate-400 mt-0.5">Already have an account?</p>
+                            )}
                         </div>
+                    </div>
+                    <motion.div
+                        animate={{ rotate: isSignIn ? 90 : 0, opacity: isSignIn ? 0 : 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ChevronRight className={`w-4 h-4 transition-colors duration-200 ${isSignIn ? "text-transparent" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    </motion.div>
+                </button>
+
+                {/* Expanded Sign In Content */}
+                <AnimatePresence initial={false}>
+                    {isSignIn && (
                         <motion.div
-                            animate={{ rotate: isSignIn ? 90 : 0, opacity: isSignIn ? 0 : 1 }}
-                            transition={{ duration: 0.3 }}
+                            key="signin-body"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.55, ease: EASE }}
+                            className="overflow-hidden"
                         >
-                            <ChevronRight className={`w-4 h-4 transition-colors duration-200 ${isSignIn ? "text-transparent" : "text-slate-400 group-hover:text-slate-600"}`} />
-                        </motion.div>
-                    </button>
+                            <div className="px-6 pb-6 space-y-4">
+                                {/* Google Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleSignInGoogle}
+                                    className="w-full h-[46px] flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 text-sm font-medium text-slate-700 hover:shadow-sm cursor-pointer"
+                                >
+                                    <GoogleIcon />
+                                    Continue with Google
+                                </button>
 
-                    {/* Expanded Sign In Content */}
-                    <AnimatePresence initial={false}>
-                        {isSignIn && (
-                            <motion.div
-                                key="signin-body"
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.55, ease: EASE }}
-                                className="overflow-hidden"
-                            >
-                                <div className="px-6 pb-6 space-y-4">
-                                    {/* Google Button */}
-                                    <button
-                                        type="button"
-                                        onClick={handleSignInGoogle}
-                                        className="w-full h-[46px] flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 text-sm font-medium text-slate-700 hover:shadow-sm cursor-pointer"
-                                    >
-                                        <GoogleIcon />
-                                        Continue with Google
-                                    </button>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 h-px bg-slate-200" />
+                                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">or</span>
+                                    <div className="flex-1 h-px bg-slate-200" />
+                                </div>
 
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex-1 h-px bg-slate-200" />
-                                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">or</span>
-                                        <div className="flex-1 h-px bg-slate-200" />
+                                <form onSubmit={handleSignInSubmit} className="space-y-3">
+                                    {signInError && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -6 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100"
+                                        >
+                                            {signInError}
+                                        </motion.div>
+                                    )}
+                                    <div className="relative flex items-center">
+                                        <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                        <input type="email" value={signInEmail} onChange={e => setSignInEmail(e.target.value)} placeholder="Email address" className={inputClass} required />
                                     </div>
+                                    <div className="relative flex items-center">
+                                        <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                        <input type={showSignInPassword ? "text" : "password"} value={signInPassword} onChange={e => setSignInPassword(e.target.value)} placeholder="Password" className={`${inputClass} pr-11`} required />
+                                        <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                            {showSignInPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Link href="#" className="text-[#1DA1F2] text-xs font-medium hover:underline">Forgot password?</Link>
+                                    </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        type="submit"
+                                        disabled={isSignInLoading}
+                                        className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md disabled:opacity-60"
+                                    >
+                                        {isSignInLoading ? "Signing in..." : <>Sign In <ArrowRight className="w-4 h-4" /></>}
+                                    </motion.button>
+                                </form>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
 
-                                    <form onSubmit={handleSignInSubmit} className="space-y-3">
-                                        {signInError && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -6 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100"
-                                            >
-                                                {signInError}
+            {/* ===== SIGN UP ACCORDION CARD ===== */}
+            <motion.div
+                transition={{ duration: 0.55, ease: EASE }}
+                className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${!isSignIn
+                    ? "border-[#1DA1F2]/30 shadow-[0_0_0_3px_rgba(29,161,242,0.08)] bg-white"
+                    : "border-slate-200 bg-white/70"
+                    }`}
+            >
+                {/* Card Header - always visible */}
+                <button
+                    type="button"
+                    onClick={() => switchView("sign-up-student")}
+                    className="w-full flex items-center justify-between px-6 py-4 cursor-pointer group"
+                >
+                    <div className="flex items-center gap-3">
+
+                        <div className="text-left">
+                            <p className={`font-semibold text-[15px] transition-colors duration-200 ${!isSignIn ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700"}`}>
+                                Create Account
+                            </p>
+                            {isSignIn && (
+                                <p className="text-xs text-slate-400 mt-0.5">New to MentoMania?</p>
+                            )}
+                        </div>
+                    </div>
+                    <motion.div
+                        animate={{ rotate: !isSignIn ? 90 : 0, opacity: !isSignIn ? 0 : 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ChevronRight className={`w-4 h-4 transition-colors duration-200 ${!isSignIn ? "text-transparent" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    </motion.div>
+                </button>
+
+                {/* Expanded Sign Up Content */}
+                <AnimatePresence initial={false}>
+                    {!isSignIn && (
+                        <motion.div
+                            key="signup-body"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.55, ease: EASE }}
+                            className="overflow-hidden"
+                        >
+                            <div className="px-6 pb-6 space-y-4">
+
+                                {/* OTP Verification view */}
+                                {verifying ? (
+                                    <form onSubmit={handleVerify} className="space-y-4">
+                                        <div className="text-center py-2">
+                                            <p className="text-sm text-slate-600 font-medium">Check your email</p>
+                                            <p className="text-xs text-slate-400 mt-1">We sent a 6-digit code to <span className="font-semibold text-slate-600">{signUpEmail}</span></p>
+                                        </div>
+                                        {signUpError && (
+                                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100">
+                                                {signUpError}
                                             </motion.div>
                                         )}
-                                        <div className="relative flex items-center">
-                                            <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                            <input type="email" value={signInEmail} onChange={e => setSignInEmail(e.target.value)} placeholder="Email address" className={inputClass} required />
-                                        </div>
-                                        <div className="relative flex items-center">
-                                            <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                            <input type={showSignInPassword ? "text" : "password"} value={signInPassword} onChange={e => setSignInPassword(e.target.value)} placeholder="Password" className={`${inputClass} pr-11`} required />
-                                            <button type="button" onClick={() => setShowSignInPassword(!showSignInPassword)} className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-                                                {showSignInPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                            </button>
-                                        </div>
-                                        <div className="flex justify-end">
-                                            <Link href="#" className="text-[#1DA1F2] text-xs font-medium hover:underline">Forgot password?</Link>
-                                        </div>
+                                        <input
+                                            type="text"
+                                            value={code}
+                                            onChange={e => setCode(e.target.value)}
+                                            placeholder="Enter 6-digit code"
+                                            className="w-full h-[50px] px-4 bg-white border border-slate-200 rounded-xl text-center text-xl tracking-[0.3em] font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1DA1F2]/25 focus:border-[#1DA1F2] transition-all"
+                                            maxLength={6}
+                                            required
+                                        />
                                         <motion.button
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            type="submit"
-                                            disabled={isSignInLoading}
-                                            className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md disabled:opacity-60"
+                                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                                            type="submit" disabled={isSignUpLoading || code.length < 6}
+                                            className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                                         >
-                                            {isSignInLoading ? "Signing in..." : <>Sign In <ArrowRight className="w-4 h-4" /></>}
+                                            {isSignUpLoading ? "Verifying..." : "Verify Email"}
                                         </motion.button>
                                     </form>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
+                                ) : (
+                                    <>
+                                        {/* Role switcher */}
+                                        <div className="flex w-full bg-slate-100 p-1 rounded-xl">
+                                            {(["sign-up-student", "sign-up-mentor"] as const).map((v) => (
+                                                <button
+                                                    key={v}
+                                                    type="button"
+                                                    onClick={() => switchView(v)}
+                                                    className={`w-1/2 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer ${view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                                                >
+                                                    {v === "sign-up-student" ? "Student" : "Mentor"}
+                                                </button>
+                                            ))}
+                                        </div>
 
-                {/* ===== SIGN UP ACCORDION CARD ===== */}
-                <motion.div
-                    layout
-                    transition={{ duration: 0.55, ease: EASE }}
-                    className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${!isSignIn
-                        ? "border-[#1DA1F2]/30 shadow-[0_0_0_3px_rgba(29,161,242,0.08)] bg-white"
-                        : "border-slate-200 bg-white/70"
-                        }`}
-                >
-                    {/* Card Header - always visible */}
-                    <button
-                        type="button"
-                        onClick={() => switchView("sign-up-student")}
-                        className="w-full flex items-center justify-between px-6 py-4 cursor-pointer group"
-                    >
-                        <div className="flex items-center gap-3">
-                            <motion.div
-                                animate={{ scale: !isSignIn ? 1 : 0.85, opacity: !isSignIn ? 1 : 0.5 }}
-                                transition={{ duration: 0.3, ease: EASE }}
-                                className="w-8 h-8 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2] font-bold text-sm shrink-0"
-                            >
-                                2
-                            </motion.div>
-                            <div className="text-left">
-                                <p className={`font-semibold text-[15px] transition-colors duration-200 ${!isSignIn ? "text-slate-900" : "text-slate-500 group-hover:text-slate-700"}`}>
-                                    Create Account
-                                </p>
-                                {isSignIn && (
-                                    <p className="text-xs text-slate-400 mt-0.5">New to MentoMania?</p>
-                                )}
-                            </div>
-                        </div>
-                        <motion.div
-                            animate={{ rotate: !isSignIn ? 90 : 0, opacity: !isSignIn ? 0 : 1 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <ChevronRight className={`w-4 h-4 transition-colors duration-200 ${!isSignIn ? "text-transparent" : "text-slate-400 group-hover:text-slate-600"}`} />
-                        </motion.div>
-                    </button>
+                                        {/* Google Button */}
+                                        <button
+                                            type="button"
+                                            onClick={handleSignUpGoogle}
+                                            className="w-full h-[46px] flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 text-sm font-medium text-slate-700 hover:shadow-sm cursor-pointer"
+                                        >
+                                            <GoogleIcon />
+                                            Continue with Google
+                                        </button>
 
-                    {/* Expanded Sign Up Content */}
-                    <AnimatePresence initial={false}>
-                        {!isSignIn && (
-                            <motion.div
-                                key="signup-body"
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.55, ease: EASE }}
-                                className="overflow-hidden"
-                            >
-                                <div className="px-6 pb-6 space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-px bg-slate-200" />
+                                            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">or</span>
+                                            <div className="flex-1 h-px bg-slate-200" />
+                                        </div>
 
-                                    {/* OTP Verification view */}
-                                    {verifying ? (
-                                        <form onSubmit={handleVerify} className="space-y-4">
-                                            <div className="text-center py-2">
-                                                <p className="text-sm text-slate-600 font-medium">Check your email</p>
-                                                <p className="text-xs text-slate-400 mt-1">We sent a 6-digit code to <span className="font-semibold text-slate-600">{signUpEmail}</span></p>
-                                            </div>
+                                        <form onSubmit={handleSignUpSubmit} className="space-y-3">
                                             {signUpError && (
-                                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100">
+                                                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100">
                                                     {signUpError}
                                                 </motion.div>
                                             )}
-                                            <input
-                                                type="text"
-                                                value={code}
-                                                onChange={e => setCode(e.target.value)}
-                                                placeholder="Enter 6-digit code"
-                                                className="w-full h-[50px] px-4 bg-white border border-slate-200 rounded-xl text-center text-xl tracking-[0.3em] font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1DA1F2]/25 focus:border-[#1DA1F2] transition-all"
-                                                maxLength={6}
-                                                required
-                                            />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="relative flex items-center">
+                                                    <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name" className={inputClass} required />
+                                                </div>
+                                                <div className="relative flex items-center">
+                                                    <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name" className={inputClass} required />
+                                                </div>
+                                            </div>
+                                            <div className="relative flex items-center">
+                                                <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                <input type="email" value={signUpEmail} onChange={e => setSignUpEmail(e.target.value)} placeholder="Email address" className={inputClass} required />
+                                            </div>
+                                            <div className="relative flex items-center">
+                                                <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                <input type={showSignUpPassword ? "text" : "password"} value={signUpPassword} onChange={e => setSignUpPassword(e.target.value)} placeholder="Create password" className={`${inputClass} pr-11`} required />
+                                                <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                                    {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                </button>
+                                            </div>
                                             <motion.button
                                                 whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                                                type="submit" disabled={isSignUpLoading || code.length < 6}
-                                                className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                                                type="submit" disabled={isSignUpLoading}
+                                                className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md disabled:opacity-60"
                                             >
-                                                {isSignUpLoading ? "Verifying..." : "Verify Email"}
+                                                {isSignUpLoading ? "Creating account..." : <>Create Account <ArrowRight className="w-4 h-4" /></>}
                                             </motion.button>
                                         </form>
-                                    ) : (
-                                        <>
-                                            {/* Role switcher */}
-                                            <div className="flex w-full bg-slate-100 p-1 rounded-xl">
-                                                {(["sign-up-student", "sign-up-mentor"] as const).map((v) => (
-                                                    <button
-                                                        key={v}
-                                                        type="button"
-                                                        onClick={() => switchView(v)}
-                                                        className={`w-1/2 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer ${view === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-                                                    >
-                                                        {v === "sign-up-student" ? "Student" : "Mentor"}
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            {/* Google Button */}
-                                            <button
-                                                type="button"
-                                                onClick={handleSignUpGoogle}
-                                                className="w-full h-[46px] flex items-center justify-center gap-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all duration-200 text-sm font-medium text-slate-700 hover:shadow-sm cursor-pointer"
-                                            >
-                                                <GoogleIcon />
-                                                Continue with Google
-                                            </button>
-
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex-1 h-px bg-slate-200" />
-                                                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">or</span>
-                                                <div className="flex-1 h-px bg-slate-200" />
-                                            </div>
-
-                                            <form onSubmit={handleSignUpSubmit} className="space-y-3">
-                                                {signUpError && (
-                                                    <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 text-red-600 px-3 py-2.5 rounded-lg text-xs font-medium border border-red-100">
-                                                        {signUpError}
-                                                    </motion.div>
-                                                )}
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="relative flex items-center">
-                                                        <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                        <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name" className={inputClass} required />
-                                                    </div>
-                                                    <div className="relative flex items-center">
-                                                        <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                        <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name" className={inputClass} required />
-                                                    </div>
-                                                </div>
-                                                <div className="relative flex items-center">
-                                                    <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                    <input type="email" value={signUpEmail} onChange={e => setSignUpEmail(e.target.value)} placeholder="Email address" className={inputClass} required />
-                                                </div>
-                                                <div className="relative flex items-center">
-                                                    <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                    <input type={showSignUpPassword ? "text" : "password"} value={signUpPassword} onChange={e => setSignUpPassword(e.target.value)} placeholder="Create password" className={`${inputClass} pr-11`} required />
-                                                    <button type="button" onClick={() => setShowSignUpPassword(!showSignUpPassword)} className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-                                                        {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    </button>
-                                                </div>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                                                    type="submit" disabled={isSignUpLoading}
-                                                    className="w-full h-[46px] bg-[#1DA1F2] hover:bg-[#1a90d9] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md disabled:opacity-60"
-                                                >
-                                                    {isSignUpLoading ? "Creating account..." : <>Create Account <ArrowRight className="w-4 h-4" /></>}
-                                                </motion.button>
-                                            </form>
-                                        </>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.div>
-
-                {/* Footer */}
-                <p className="text-center text-[12px] text-slate-400 leading-relaxed font-medium pt-1">
-                    By continuing, you agree to our{" "}
-                    <Link href="#" className="underline hover:text-slate-600 transition-colors">Terms</Link>
-                    {" "}and{" "}
-                    <Link href="#" className="underline hover:text-slate-600 transition-colors">Privacy Policy</Link>.
-                </p>
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
-        </LayoutGroup>
+
+            {/* Footer */}
+            <p className="text-center text-[12px] text-slate-400 leading-relaxed font-medium pt-1">
+                By continuing, you agree to our{" "}
+                <Link href="#" className="underline hover:text-slate-600 transition-colors">Terms</Link>
+                {" "}and{" "}
+                <Link href="#" className="underline hover:text-slate-600 transition-colors">Privacy Policy</Link>.
+            </p>
+        </div>
     );
 }
