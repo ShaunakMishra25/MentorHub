@@ -86,7 +86,7 @@ import QRCode from "react-qr-code";
 
 function QRPlaceholder({ value = "https://mentomania.com/profile" }: { value?: string }) {
   return (
-    <div style={{ padding: "8px", background: "#FFFFFF", borderRadius: "8px" }}>
+    <div className="p-2 bg-white rounded-lg">
       <QRCode
         value={value}
         size={90}
@@ -115,25 +115,17 @@ function SharePopover({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0, scale: 0.95, x: -10, y: "-50%" }}
       animate={{ opacity: 1, scale: 1, x: 0, y: "-50%" }}
       exit={{ opacity: 0, scale: 0.95, x: -10, y: "-50%" }}
+      className="fixed inset-x-4 bottom-4 sm:absolute sm:inset-auto sm:bottom-auto sm:right-auto sm:top-1/2 sm:-translate-y-1/2 sm:left-[calc(100%+16px)] bg-white border border-slate-200 rounded-lg sm:rounded-xl shadow-lg z-50 sm:z-100 p-4 sm:p-5 w-auto sm:min-w-[220px]"
       style={{
-        position: "absolute", top: "50%", left: "calc(100% + 16px)", transform: "translateY(-50%)",
-        background: "#FFFFFF",
-        border: `1px solid ${D.border}`, borderRadius: 14, padding: "16px 18px",
-        minWidth: 220, zIndex: 100,
         boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <p style={{ fontSize: 11, color: D.muted, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>Share Profile</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Share Profile</p>
       <button
         onClick={handleCopy}
-        style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 10,
-          background: D.accentDim, border: `1px solid ${D.border}`, borderRadius: 8,
-          padding: "8px 12px", color: D.accent, fontSize: 13, fontWeight: 500, cursor: "pointer",
-          marginBottom: 8, transition: "all 0.2s",
-        }}
+        className="w-full flex items-center justify-center gap-2 bg-blue-50 border border-slate-200 text-blue-600 rounded-lg py-2.5 text-xs sm:text-sm font-medium mb-2 hover:bg-blue-100 transition-colors cursor-pointer"
       >
-        <Copy size={16} color={D.accent} /> Copy Link
+        <Copy size={14} /> Copy Link
       </button>
       {shareLinks.map((s) => (
         <a
@@ -141,14 +133,9 @@ function SharePopover({ onClose }: { onClose: () => void }) {
           href={s.href}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            width: "100%", display: "flex", alignItems: "center", gap: 10,
-            background: "transparent", border: `1px solid ${D.border}`, borderRadius: 8,
-            padding: "8px 12px", color: D.text, fontSize: 13, fontWeight: 500,
-            marginBottom: 6, textDecoration: "none", transition: "border-color 0.2s",
-          }}
+          className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 rounded-lg py-2.5 text-xs sm:text-sm font-medium mb-2 hover:border-slate-300 transition-colors"
         >
-          <s.icon size={16} color={s.color} /> {s.label}
+          <s.icon size={14} color={s.color} /> <span className="hidden sm:inline">{s.label}</span>
         </a>
       ))}
     </motion.div>
@@ -175,30 +162,21 @@ function ProfileAvatar({ initials, profilePhoto }: { initials: string, profilePh
 
   return (
     <div
-      style={{ position: "relative", zIndex: 50 }}
+      className="relative z-50"
       ref={hoverContainerRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setShowShare(false); }}
     >
-      <div style={{ position: "relative", display: "inline-block" }} ref={popoverRef}>
+      <div className="relative inline-block" ref={popoverRef}>
         <div
-          style={{
-            width: 144, height: 144, position: "relative", cursor: "pointer",
-            borderRadius: "50%", overflow: "hidden", border: "4px solid #FFFFFF",
-            boxShadow: "0 4px 14px rgba(37, 99, 235, 0.2)",
-            background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
-            zIndex: 20
-          }}
+          className="w-24 h-24 sm:w-36 sm:h-36 relative cursor-pointer rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center flex-shrink-0"
         >
           {/* Front: Image or Initials */}
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+          <div className="absolute inset-0 flex items-center justify-center">
             {profilePhoto ? (
-              <img src={profilePhoto} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={profilePhoto} alt="Profile" className="w-full h-full object-cover" />
             ) : (
-              <span style={{ fontSize: 36, fontWeight: 600, color: "#fff", letterSpacing: "-0.02em" }}>{initials}</span>
+              <span className="text-2xl sm:text-5xl font-bold text-white tracking-tight">{initials}</span>
             )}
           </div>
         </div>
@@ -208,17 +186,12 @@ function ProfileAvatar({ initials, profilePhoto }: { initials: string, profilePh
           whileHover={{ x: 4, scale: 1.1 }}
           onClick={(e) => { e.stopPropagation(); setShowShare((v) => !v); }}
           onMouseEnter={() => setShowShare(true)}
-          style={{
-            position: "absolute", bottom: 2, right: 2, width: 36, height: 36,
-            background: "#FFFFFF", borderRadius: "50%", border: `1px solid ${D.border}`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 30
-          }}
+          className="absolute bottom-1 right-1 w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-full border border-slate-200 flex items-center justify-center cursor-pointer shadow-md z-30"
         >
-          <Share2 size={16} color={D.accent} />
+          <Share2 size={14} className="text-blue-600" />
         </motion.button>
 
-        {/* Dropdown Card on Hover */}
+        {/* Dropdown Card on Hover - Desktop Only */}
         <motion.div
           initial={false}
           animate={{
@@ -228,76 +201,53 @@ function ProfileAvatar({ initials, profilePhoto }: { initials: string, profilePh
             scale: hovered ? 1 : 0.95
           }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          style={{
-            pointerEvents: hovered ? "auto" : "none",
-            position: "absolute", top: "50%", left: "calc(100% + 20px)",
-            background: "#FFFFFF", border: `1px solid ${D.border}`,
-            borderRadius: 16, padding: "16px", minWidth: 160, zIndex: 100,
-            boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 12
-          }}
+          className="hidden sm:flex absolute top-1/2 left-[calc(100%+20px)] -translate-y-1/2 bg-white border border-slate-200 rounded-xl flex-col items-center gap-3 p-4 shadow-xl z-100 pointer-events-none"
+          style={{ pointerEvents: hovered ? "auto" : "none" }}
         >
           {/* Left Caret Arrow */}
           <div
-            style={{
-              position: "absolute", top: "50%", left: -7, transform: "translateY(-50%) rotate(45deg)",
-              width: 14, height: 14, background: "#FFFFFF",
-              borderLeft: `1px solid ${D.border}`, borderBottom: `1px solid ${D.border}`,
-              borderTopRightRadius: 2, zIndex: 1
-            }}
+            className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-l border-b border-slate-200 rotate-45"
+            style={{ zIndex: 1 }}
           />
 
-          <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%" }}>
-            <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+          <div className="relative z-10 flex flex-col items-center justify-center w-full">
+            <div className="flex justify-center w-full">
               <QRPlaceholder />
             </div>
-            <p style={{ fontSize: 11, color: D.text, marginTop: 4, textAlign: "center", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>Scan or Click</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-700 mt-1">Scan or Click</p>
           </div>
 
-          <div style={{ width: "100%", height: 1, background: "#F1F5F9", margin: "2px 0" }} />
+          <div className="w-full h-px bg-slate-100 my-1" />
 
-          <div style={{ position: "relative", zIndex: 2, width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="relative z-10 w-full flex flex-col gap-2">
             <button
               onClick={() => navigator.clipboard.writeText(profileUrl)}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                background: D.accentDim, border: `1px solid ${D.border}`, borderRadius: 8,
-                padding: "8px 12px", color: D.accent, fontSize: 13, fontWeight: 500, cursor: "pointer",
-                transition: "all 0.2s",
-              }}
+              className="w-full flex items-center justify-center gap-2 bg-blue-50 border border-slate-200 text-blue-600 rounded-lg py-2 text-xs font-medium hover:bg-blue-100 transition-colors"
             >
-              <Copy size={14} /> Copy Link
+              <Copy size={12} /> Copy Link
             </button>
             <div className="flex w-full gap-2">
               <a
                 href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(profileUrl)}&text=Check+out+my+Mentomania+profile!`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "transparent", border: `1px solid ${D.border}`, borderRadius: 8,
-                  padding: "8px", color: "#1DA1F2", cursor: "pointer", transition: "all 0.2s"
-                }}
+                className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-lg py-2 text-blue-400 hover:bg-blue-50 transition-colors"
               >
-                <Twitter size={16} />
+                <Twitter size={14} />
               </a>
               <a
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "transparent", border: `1px solid ${D.border}`, borderRadius: 8,
-                  padding: "8px", color: "#0A66C2", cursor: "pointer", transition: "all 0.2s"
-                }}
+                className="flex-1 flex items-center justify-center bg-white border border-slate-200 rounded-lg py-2 text-blue-700 hover:bg-blue-50 transition-colors"
               >
-                <Linkedin size={16} />
+                <Linkedin size={14} />
               </a>
             </div>
           </div>
         </motion.div>
 
-        {/* Legacy Share Popover (Keep for explicit click if needed, though redundant now) */}
+        {/* Legacy Share Popover (Mobile Bottom Sheet) */}
         <AnimatePresence>
           {showShare && !hovered && <SharePopover onClose={() => setShowShare(false)} />}
         </AnimatePresence>
@@ -446,27 +396,24 @@ function StatCard({ label, value, icon: Icon, accent = D.accent, bgHighlight = D
   label: string; value: string; icon: any; accent?: string; bgHighlight?: string; trend?: string;
 }) {
   return (
-    <div style={{
-      background: D.surface, border: `1px solid ${D.border}`, borderRadius: 16,
-      padding: "20px 24px", transition: "all 0.25s",
-      position: "relative", overflow: "hidden",
-    }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = D.borderAccent; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = D.border; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 transition-all hover:border-slate-300 hover:-translate-y-1 hover:shadow-md"
+      style={{
+        position: "relative", overflow: "hidden",
+      }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div style={{ width: 42, height: 42, borderRadius: 10, background: bgHighlight, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: bgHighlight }}>
           <Icon size={20} color={accent} />
         </div>
         {trend && (
-          <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color: D.success, background: "#ECFDF5", padding: "4px 8px", borderRadius: 6 }}>
+          <span className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-md">
             <ArrowUpRight size={12} strokeWidth={2.5} /> {trend}
           </span>
         )}
       </div>
-      <div style={{ marginTop: 20 }}>
-        <p style={{ fontSize: 13, color: D.muted, marginBottom: 4, fontWeight: 500 }}>{label}</p>
-        <p style={{ fontSize: 32, color: D.text, letterSpacing: "-0.03em", fontWeight: 700 }}>{value}</p>
+      <div>
+        <p className="text-xs sm:text-sm text-slate-600 font-medium mb-2">{label}</p>
+        <p className="text-xl sm:text-2xl text-slate-900 font-bold tracking-tight">{value}</p>
       </div>
     </div>
   );
@@ -771,7 +718,8 @@ function PaymentsTab() {
         </DashCard>
       </div>
       <DashCard title="Recent Transactions" subtitle="Latest payment activity">
-        <div className="overflow-x-auto mt-4">
+        {/* Desktop Table */}
+        <div className="hidden sm:block overflow-x-auto mt-4">
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ borderBottom: `1px solid ${D.border}` }}>
@@ -796,6 +744,27 @@ function PaymentsTab() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card Layout */}
+        <div className="sm:hidden space-y-3 mt-4">
+          {recentTransactions.map((t) => (
+            <div key={t.id} className="rounded-lg border border-slate-200 p-4 space-y-2">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900">{t.student}</p>
+                  <p className="text-xs text-slate-500">{t.date}</p>
+                </div>
+                <StatusBadge status={t.status as any} />
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">{t.method}</span>
+                </div>
+                <span className="text-sm font-bold text-slate-900">₹{t.amount.toLocaleString()}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </DashCard>
     </div>
