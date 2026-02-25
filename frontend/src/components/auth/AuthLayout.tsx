@@ -149,9 +149,13 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         initial={{ opacity: 0, x: 24 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, delay: 0.2, ease: EASE }}
-                        className="w-full lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center items-center bg-white relative"
+                        className="w-full lg:w-1/2 p-8 sm:p-10 flex flex-col justify-center items-center bg-white relative"
                     >
-                        <div className="w-full max-w-sm">
+                        <div className="w-full max-w-md">
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Get started</h2>
+                                <p className="text-slate-500 text-sm mt-1">Sign in or create a new account below.</p>
+                            </div>
                             {children}
                         </div>
                     </motion.div>
