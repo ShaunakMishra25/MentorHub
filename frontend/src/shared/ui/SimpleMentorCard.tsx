@@ -2,13 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck, Briefcase, Users, TrendingUp, Star, MessageCircle, User, Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
-import TagBadge from "./TagBadge";
+import { Star, User, Phone, CheckCircle2, Briefcase, Calendar, BookOpen, BadgeCheck } from "lucide-react";
 import { useState } from "react";
-import { useMemo } from "react";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { Button } from "@/shared/ui/button";
 
 type MentorCardData = {
   id: string;
@@ -37,12 +33,10 @@ type MentorCardData = {
   responseTime?: string;
   subjects?: string[];
   specializations?: string[];
-
   service?: string;
   posting?: string;
   attempts?: number;
   optionalSubject?: string;
-
   offerings?: {
     id: string;
     title: string;
@@ -63,171 +57,231 @@ export default function SimpleMentorCard({
 }: SimpleMentorCardProps) {
   const [imageError, setImageError] = useState(false);
 
+  /* ── Loading skeleton ── */
   if (isLoading) {
     return (
-      <div className="bg-surface-background rounded-2xl border border-border-subtle p-8 shadow-sm">
-        <div className="flex gap-8">
-          <Skeleton className="w-32 h-32 rounded-xl flex-shrink-0" />
-          <div className="flex-1 space-y-4">
-            <div className="flex justify-between items-start">
-              <Skeleton className="h-8 w-1/3" />
-              <Skeleton className="h-8 w-24" />
-            </div>
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <div className="flex gap-4 pt-4">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-20" />
-            </div>
-            <div className="flex justify-between items-center pt-6 mt-4 border-t border-border-subtle">
-              <Skeleton className="h-8 w-32" />
-              <Skeleton className="h-10 w-32 rounded-xl" />
-            </div>
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm w-full">
+        <div className="flex items-start gap-5 mb-6">
+          <Skeleton className="w-24 h-24 rounded-xl flex-shrink-0" />
+          <div className="flex-1 space-y-2 pt-1">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-4 w-1/3" />
           </div>
         </div>
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-5 w-full mb-3 rounded-lg" />
+        ))}
+        <Skeleton className="h-14 w-full mt-5 rounded-2xl" />
       </div>
     );
   }
 
   if (!mentor) return null;
 
-  const profileImageUrl = mentor.mentorProfile?.basicInfo?.profilePhoto || mentor.imageUrl || mentor.profileImage;
+  const profileImageUrl =
+    mentor.mentorProfile?.basicInfo?.profilePhoto ||
+    mentor.imageUrl ||
+    mentor.profileImage;
 
-  const trustSignal = useMemo(() => {
-    if (!mentor) return null;
-    const signals = [
-      "Usually responds within 15 mins",
-      "Available today",
-      "3 students booked today",
-      "4 students viewing right now",
-      "High demand recently",
-    ];
-    const index = mentor.name ? mentor.name.charCodeAt(0) % signals.length : 0;
-    return signals[index];
-  }, [mentor]);
+  /* ── Stat rows — matching reference image layout ── */
+  type StatRow = { icon: React.ReactNode; label: string };
+  const statRows: StatRow[] = [];
 
-  const badges = [
-    mentor.exam && { text: mentor.exam, variant: "primary" },
-    mentor.service && { text: mentor.service, variant: "secondary" },
-    mentor.posting && { text: mentor.posting, variant: "accent" },
-    mentor.college && { text: mentor.college, variant: "secondary" },
-  ].filter(Boolean) as { text: string; variant: "primary" | "secondary" | "accent" }[];
+  /* Row 1 → exam selection (blue check circle = "Selected in SSC") */
+  if (mentor.exam) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+        </span>
+      ),
+      label: `Selected in ${mentor.exam}`,
+    });
+  }
+
+  /* Row 2 → posting / service (amber hexagon badge = role title) */
+  if (mentor.posting || mentor.service) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+          <BadgeCheck className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+        </span>
+      ),
+      label: mentor.posting || mentor.service || "",
+    });
+  }
+
+  /* Row 3 → college / institution */
+  if (mentor.college) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <BookOpen className="w-3.5 h-3.5 text-blue-600" strokeWidth={2} />
+        </span>
+      ),
+      label: mentor.college,
+    });
+  }
+
+  /* Row 4 → years of experience → displayed as year like reference */
+  if (mentor.yearsOfExperience !== undefined) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <Calendar className="w-3.5 h-3.5 text-blue-600" strokeWidth={2} />
+        </span>
+      ),
+      label: `${mentor.yearsOfExperience}+ Years Experience`,
+    });
+  }
+
+  /* Row 5 → session count */
+  if (mentor.sessions !== undefined) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <Briefcase className="w-3.5 h-3.5 text-blue-600" strokeWidth={2} />
+        </span>
+      ),
+      label: `Session ${mentor.sessions.toLocaleString()}`,
+    });
+  }
+
+  /* Row 6 → attendance % (green check circle) */
+  if (mentor.attendance !== undefined) {
+    statRows.push({
+      icon: (
+        <span className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+        </span>
+      ),
+      label: `${mentor.attendance}% Avg. Attendance`,
+    });
+  }
+
+  /* Fallback if no structured stats: show tagLine or bio */
+  if (statRows.length === 0) {
+    if (mentor.tagLine)
+      statRows.push({
+        icon: (
+          <span className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Star className="w-3.5 h-3.5 text-blue-600 fill-blue-600" />
+          </span>
+        ),
+        label: mentor.tagLine,
+      });
+  }
 
   return (
     <div className="block w-full relative group cursor-pointer">
-      <div className="bg-surface-background rounded-2xl border border-border-subtle shadow-sm relative">
-        <Link href={`/mentors/${mentor.id}`} className="absolute inset-0 z-0">
-          <span className="sr-only">View {mentor.name}'s profile</span>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-visible transition-all duration-200 group-hover:shadow-md group-hover:border-blue-100">
+        {/* Full-card invisible link */}
+        <Link href={`/mentors/${mentor.id}`} className="absolute inset-0 z-0 rounded-2xl">
+          <span className="sr-only">View {mentor.name}&apos;s profile</span>
         </Link>
-        <div className="p-8 relative z-10 pointer-events-none">
-          <div className="flex gap-8">
+
+        <div className="p-6 relative z-10 pointer-events-none">
+
+          {/* ── Header: photo + blue verified badge + name + star rating ── */}
+          <div className="flex items-start gap-5 mb-6">
+            {/* Photo container */}
             <div className="relative flex-shrink-0">
-              <div className="w-32 h-32 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-border-subtle">
+              <div className="w-[88px] h-[88px] rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
                 {profileImageUrl && !imageError ? (
                   <Image
                     src={profileImageUrl}
-                    alt={mentor.name || 'Mentor'}
-                    width={128}
-                    height={128}
+                    alt={mentor.name || "Mentor"}
+                    width={88}
+                    height={88}
                     className="object-cover w-full h-full"
                     onError={() => setImageError(true)}
                   />
                 ) : (
-                  <User className="w-12 h-12 text-gray-300" />
+                  <User className="w-10 h-10 text-gray-300" />
                 )}
               </div>
+
+              {/* Blue verified checkmark badge — top-right of photo */}
               {mentor.isVerified && (
-                <div className="absolute -top-2 -right-2 bg-blue-600 p-1.5 rounded-full ring-4 ring-white shadow-sm">
-                  <BadgeCheck className="w-4 h-4 text-white" />
+                <div
+                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center shadow-md ring-2 ring-white"
+                  title="Verified Mentor"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="w-4 h-4 text-white"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                 </div>
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {mentor.name}
-                  </h3>
-                  {mentor.rating !== undefined && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 rounded-md border border-gray-100">
-                      <Star className="w-3.5 h-3.5 fill-gray-900 text-gray-900" />
-                      <span className="text-sm font-semibold text-gray-900">
-                        {mentor.rating.toFixed(1)}
+            {/* Name + star rating + stat rows — all in right column */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <h3 className="text-xl font-bold text-gray-900 leading-snug group-hover:text-blue-600 transition-colors">
+                {mentor.name}
+              </h3>
+              {mentor.rating !== undefined && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400 flex-shrink-0" />
+                  <span className="text-base font-semibold text-gray-800">
+                    {mentor.rating.toFixed(1)}
+                  </span>
+                  {mentor.reviewsCount !== undefined && (
+                    <span className="text-sm text-gray-500">
+                      ({mentor.reviewsCount} Reviews)
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* ── Icon-label stat rows — indented under name ── */}
+              {statRows.length > 0 && (
+                <div className="space-y-2.5 mt-4">
+                  {statRows.map((row, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      {row.icon}
+                      <span className="text-sm font-medium text-gray-700 leading-snug">
+                        {row.label}
                       </span>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-              {mentor.tagLine && (
-                <p className="text-sm text-blue-600 font-medium mb-3 line-clamp-1">{mentor.tagLine}</p>
               )}
-
-              {/* Exam / College / Subject badges */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {badges.slice(0, 2).map((badge, index) => (
-                  <TagBadge key={index} text={badge.text} variant={badge.variant as "primary" | "secondary" | "accent"} />
-                ))}
-                {mentor.subjects?.slice(0, 2).map((subject, index) => (
-                  <TagBadge key={`sub-${index}`} text={subject} variant="secondary" />
-                ))}
-              </div>
-
-              <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 mb-6 pr-4">
-                {mentor.bio}
-              </p>
-
-              <div className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                {mentor.yearsOfExperience !== undefined && (
-                  <span className="flex items-center gap-1.5">
-                    <Briefcase className="w-4 h-4 text-gray-400" />
-                    {mentor.yearsOfExperience}+ Years Exp.
-                  </span>
-                )}
-                {mentor.yearsOfExperience !== undefined && mentor.sessions !== undefined && (
-                  <span className="text-gray-300">•</span>
-                )}
-                {mentor.sessions !== undefined && (
-                  <span className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    {mentor.sessions.toLocaleString()}+ Sessions
-                  </span>
-                )}
-                {mentor.reviewsCount !== undefined && (
-                  <>
-                    <span className="text-gray-300">•</span>
-                    <span className="flex items-center gap-1.5">
-                      <MessageCircle className="w-4 h-4 text-gray-400" />
-                      {mentor.reviewsCount} Reviews
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-border-subtle relative z-20 pointer-events-auto">
-                <div>
-                  <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Session From</div>
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-xl font-bold text-gray-900 tracking-tight">₹{mentor.pricing || 199}</div>
-                    {mentor.sessionDuration && (
-                      <span className="text-xs text-gray-400">· {mentor.sessionDuration} min</span>
-                    )}
-                  </div>
-                  {mentor.isFreeTrialEnabled && (
-                    <span className="text-xs text-green-600 font-semibold">Free Trial Available</span>
-                  )}
-                </div>
-                <Link
-                  href={`/book/${mentor.id}`}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-[0.98]"
-                >
-                  Book Session
-                </Link>
-              </div>
             </div>
           </div>
+
+          {/* ── Divider ── */}
+          <div className="border-t border-gray-100 mb-5" />
+
+          {/* ── CTA Button (pointer-events re-enabled) ── */}
+          <div className="pointer-events-auto">
+            <Link
+              href={`/book/${mentor.id}`}
+              className="flex flex-col items-center justify-center w-full rounded-2xl py-3.5 px-5 bg-blue-50 hover:bg-blue-100 transition-colors duration-200 active:scale-[0.98] border border-blue-100"
+            >
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-blue-600 fill-blue-600" />
+                <span className="text-base font-bold text-blue-700">
+                  Book 1:1 Session
+                </span>
+              </div>
+              <span className="mt-1 text-xs font-semibold rounded-full px-3 py-0.5 bg-blue-200 text-blue-800">
+                {mentor.isFreeTrialEnabled
+                  ? "Free"
+                  : mentor.pricing
+                    ? `₹${mentor.pricing}`
+                    : "Free"}
+              </span>
+            </Link>
+          </div>
+
         </div>
       </div>
     </div>

@@ -265,7 +265,7 @@ export default function MentorsPage() {
               </div>
             ) : (
               <>
-                <div className="space-y-10">
+                <div className="space-y-5">
                   {paginatedMentors.map((mentor) => (
                     <SimpleMentorCard
                       key={mentor.id}

@@ -118,12 +118,41 @@ export const fetchMentors = async (): Promise<MentorProfile[]> => {
             }
           ],
 
-          // Govt Specific Fields (Pass through if present, otherwise undefined)
+          // Govt Specific Fields (Pass through if present)
           service: mentor.service,
           posting: mentor.posting,
           rank: mentor.rank,
           attempts: mentor.attempts,
-          exam: mentor.exam || expertise.subjects?.[0] || "General",
+          exam: (() => {
+            const explicitExam = mentor.exam;
+            if (explicitExam) return explicitExam;
+
+            const subjects = expertise.subjects || [];
+            const role = basic.currentRole || "";
+            const org = basic.currentOrganisation || "";
+            const specializations = expertise.specializations || "";
+
+            const combinedText = `${role} ${org} ${specializations} ${subjects.join(" ")}`.toLowerCase();
+
+            // Check for known exam keywords in order of priority
+            if (combinedText.match(/\b(upsc|ias|ips|ifs|irs|cse)\b/i)) return "UPSC";
+            if (combinedText.match(/\b(ssc|cgl|aso)\b/i)) return "SSC";
+            if (combinedText.match(/\brbi\b/i)) return "RBI Grade B";
+            if (combinedText.match(/\b(psc|uppsc|mppsc|bpsc)\b/i)) return "State PSC";
+            if (combinedText.match(/\b(defence|cds|nda|afcat|navy|military|army)\b/i)) return "Defence";
+            if (combinedText.match(/\bcet\b/i)) return "CET";
+            if (combinedText.match(/\bgate\b/i)) return "GATE";
+            if (combinedText.match(/\bcat\b/i)) return "CAT";
+            if (combinedText.match(/\bneet\b/i)) return "NEET";
+            if (combinedText.match(/\bjee|iit\b/i)) return "JEE";
+            if (combinedText.match(/\bclat|law\b/i)) return "CLAT";
+            if (combinedText.match(/\bbank|po|ibps|sbi\b/i)) return "Banking";
+
+            // If no exam keyword is found, return the first subject, or a generic string
+            if (subjects.length > 0) return subjects[0];
+
+            return "General";
+          })()?.replace(" CSE", "").replace(" CGL", ""),
           optionalSubject: mentor.optionalSubject,
 
           isVerified: mentor.isVerified ?? mentor.role === "mentor",
