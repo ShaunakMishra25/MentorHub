@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { MentorProfile } from "@/app/(public)/mentors/mock";
-import { useRouter } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { fetchMentorById } from "@/shared/lib/api/mentors";
 import { Skeleton } from "@/shared/ui/skeleton";
 import {
@@ -57,8 +57,23 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoaded, isSignedIn, user } = useUser();
-  const clerk = useClerk();
+
+  // --- Restore selections that survived the sign-in round-trip ---
+  useEffect(() => {
+    if (!isLoaded) return;
+    const date = searchParams.get("date");
+    const slot = searchParams.get("slot");
+    if (date) setSelectedDate(date);
+    if (slot) setSelectedSlot(slot);
+    // If user just returned from sign-in with pre-selected values, advance automatically
+    if (isSignedIn && date && slot) {
+      setStep(2);
+    }
+    // only run once on mount — intentionally no full dep array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!mentor) {
@@ -146,9 +161,8 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
     if (!selectedDate || !selectedSlot || !isLoaded || !mentor) return;
 
     if (!isSignedIn) {
-      clerk.openSignIn({
-        redirectUrl: `/book/${mentor.id}`, // Stay on page after sign-in? Or maybe handle params
-      });
+      const bookingUrl = `/book/${mentor.id}?date=${encodeURIComponent(selectedDate)}&slot=${encodeURIComponent(selectedSlot)}`;
+      router.push(`/sign-in?redirect=${encodeURIComponent(bookingUrl)}`);
       return;
     }
 

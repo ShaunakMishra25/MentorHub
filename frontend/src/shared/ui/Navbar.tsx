@@ -143,7 +143,7 @@ export default function Navbar() {
               </div>
             </ClerkLoading>
             <SignedOut>
-              <Link href="/sign-in?redirect=/dashboard/student" className="px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer text-sm font-medium transition-colors">
+              <Link href={`/sign-in?redirect=${encodeURIComponent(pathname === "/" ? "/" : pathname)}`} className="px-4 py-2 rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer text-sm font-medium transition-colors">
                 Sign In
               </Link>
 
@@ -201,7 +201,7 @@ export default function Navbar() {
 
                 <SignedOut>
                   <div className="pt-4 flex flex-col gap-3">
-                    <Link href="/sign-in?redirect=/dashboard/student" className="w-full py-3 rounded-lg text-gray-700 bg-gray-100 font-semibold active:bg-gray-200 text-center" onClick={closeMenu}>
+                    <Link href={`/sign-in?redirect=${encodeURIComponent(pathname === "/" ? "/" : pathname)}`} className="w-full py-3 rounded-lg text-gray-700 bg-gray-100 font-semibold active:bg-gray-200 text-center" onClick={closeMenu}>
                       Sign In
                     </Link>
                     <Link href="/sign-up/student" className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold shadow-md active:bg-blue-700 text-center" onClick={closeMenu}>
