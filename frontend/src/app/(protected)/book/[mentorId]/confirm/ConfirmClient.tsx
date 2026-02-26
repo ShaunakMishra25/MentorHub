@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { type MentorProfile } from "@/app/(public)/mentors/mock";
 
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -16,48 +17,68 @@ type Props = {
 export default function ConfirmClient({ mentor, sessionDate, sessionTime, price }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useUser();
+  const { getToken } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const date = searchParams.get("date");
   const time = searchParams.get("time");
 
+  // Parse time string like "11:25 AM IST" to get just "11:25"
+  const parseTime = (timeStr: string | null): string => {
+    if (!timeStr) return "10:00";
+    const match = timeStr.match(/^(\d{1,2}:\d{2})/);
+    return match ? match[1] : "10:00";
+  };
+
   const handlePayment = async () => {
     setProcessing(true);
     setError(null);
 
     try {
-      // Simulate payment processing delay
+      // Get auth token for backend
+      const token = await getToken();
+      
+      // Simulate payment processing delay (remove in production with real payment)
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Create session with mock payment (instantly paid)
-      const response = await fetch("/api/sessions/create", {
+      // Call backend booking API to persist to database
+      const response = await fetch("/api/booking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          mentorId: mentor.id,
-          studentId: "student_demo_123", // TODO: Get from auth
-          mentorName: mentor.name,
-          studentName: "Demo Student", // TODO: Get from auth
-          price: price,
-          scheduledAt: date ? new Date(date + "T" + (time?.split(" ")[0] || "10:00")).toISOString() : new Date().toISOString(),
-          duration: 30,
+          // Use mongoId for backend, fallback to id if not available
+          mentorId: mentor.mongoId || mentor.id,
+          date: date,
+          startTime: time || sessionTime,
         }),
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.slice(0, 500));
+        setError("Server error. Please try again later.");
+        setProcessing(false);
+        return;
+      }
 
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to session details page
-        router.push(`/session/${data.sessionId}`);
+        // Redirect to session/booking details page
+        router.push(`/dashboard/sessions?booking=${data.booking?._id || 'success'}`);
       } else {
-        setError(data.error || "Payment failed. Please try again.");
+        setError(data.msg || data.error || "Booking failed. Please try again.");
         setProcessing(false);
       }
     } catch (err) {
-      console.error("Payment error:", err);
+      console.error("Booking error:", err);
       setError("An error occurred. Please try again.");
       setProcessing(false);
     }

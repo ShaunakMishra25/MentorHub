@@ -5,6 +5,7 @@ import "./globals.css";
 import ConditionalNavbar from "@/shared/ui/ConditionalNavbar";
 import ScrollProgress from "@/shared/ui/ScrollProgress";
 import { MentorOnboardingProvider } from "@/shared/lib/context/MentorOnboardingContext";
+import { SWRProvider } from "@/shared/providers/SWRProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,17 +29,19 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <MentorOnboardingProvider>
-        <html lang="en" className="scroll-smooth">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            <ScrollProgress />
-            <ConditionalNavbar />
-            <main>{children}</main>
-          </body>
-        </html>
-      </MentorOnboardingProvider>
+      <SWRProvider>
+        <MentorOnboardingProvider>
+          <html lang="en" className="scroll-smooth">
+            <body
+              className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            >
+              <ScrollProgress />
+              <ConditionalNavbar />
+              <main>{children}</main>
+            </body>
+          </html>
+        </MentorOnboardingProvider>
+      </SWRProvider>
     </ClerkProvider>
   );
 }

@@ -45,16 +45,20 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
 
   // Form State for Step 2
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  // TEMPORARILY DISABLED: Firebase OTP verification - set to true to bypass
+  const [isPhoneVerified, setIsPhoneVerified] = useState(true);
   const [couponCode, setCouponCode] = useState("");
 
-  // Firebase OTP State
+  // Firebase OTP State - TEMPORARILY DISABLED
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Flag to control OTP feature - set to false to disable OTP verification
+  const ENABLE_OTP_VERIFICATION = false;
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -92,8 +96,11 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
     }
   }, [mentor, mentorId]);
 
-  // Initialize Recaptcha
+  // Initialize Recaptcha - TEMPORARILY DISABLED
   useEffect(() => {
+    // Skip Recaptcha initialization when OTP verification is disabled
+    if (!ENABLE_OTP_VERIFICATION) return;
+    
     if (step === 2 && typeof window !== 'undefined' && !window.recaptchaVerifier) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
@@ -109,7 +116,7 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
         console.error("Recaptcha initialization failed", err);
       }
     }
-  }, [step]);
+  }, [step, ENABLE_OTP_VERIFICATION]);
 
   // Calendar logic
   const today = new Date();
@@ -554,33 +561,36 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
                     <div className="relative flex-1">
                       <input
                         type="tel"
-                        placeholder="Enter phone number"
+                        placeholder="Enter phone number (optional)"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        disabled={isOtpSent || isPhoneVerified} // Disable when OTP is sent or verified
-                        className="w-full pl-4 pr-32 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:bg-gray-50"
+                        disabled={ENABLE_OTP_VERIFICATION && (isOtpSent || isPhoneVerified)} // Disable when OTP is sent or verified (only if OTP enabled)
+                        className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:bg-gray-50"
                       />
 
-                      {/* Recaptcha Container */}
-                      <div id="recaptcha-container"></div>
+                      {/* Recaptcha Container - Only render when OTP is enabled */}
+                      {ENABLE_OTP_VERIFICATION && <div id="recaptcha-container"></div>}
 
-                      <button
-                        disabled={phoneNumber.length < 10 || isPhoneVerified || isSendingOtp || isOtpSent}
-                        onClick={handleSendOtp}
-                        className={`absolute right-1 top-1 bottom-1 px-3 rounded-md text-xs font-medium transition-colors flex items-center
-                                        ${isPhoneVerified
-                            ? "bg-green-100 text-green-700 cursor-default"
-                            : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"}`}
-                      >
-                        {isSendingOtp ? <Loader2 className="w-3 h-3 animate-spin" /> : isPhoneVerified ? "Verified" : isOtpSent ? "OTP Sent" : "Send OTP"}
-                      </button>
+                      {/* OTP Button - Only show when OTP verification is enabled */}
+                      {ENABLE_OTP_VERIFICATION && (
+                        <button
+                          disabled={phoneNumber.length < 10 || isPhoneVerified || isSendingOtp || isOtpSent}
+                          onClick={handleSendOtp}
+                          className={`absolute right-1 top-1 bottom-1 px-3 rounded-md text-xs font-medium transition-colors flex items-center
+                                          ${isPhoneVerified
+                              ? "bg-green-100 text-green-700 cursor-default"
+                              : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"}`}
+                        >
+                          {isSendingOtp ? <Loader2 className="w-3 h-3 animate-spin" /> : isPhoneVerified ? "Verified" : isOtpSent ? "OTP Sent" : "Send OTP"}
+                        </button>
+                      )}
                     </div>
                   </div>
                   {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
                 </div>
 
-                {/* OTP Input - Only show if OTP sent and not verified */}
-                {isOtpSent && !isPhoneVerified && (
+                {/* OTP Input - Only show if OTP sent and not verified (and OTP is enabled) */}
+                {ENABLE_OTP_VERIFICATION && isOtpSent && !isPhoneVerified && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -641,10 +651,10 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
                   Back
                 </button>
                 <button
-                  disabled={!isPhoneVerified}
+                  disabled={ENABLE_OTP_VERIFICATION && !isPhoneVerified}
                   onClick={handlePayment}
                   className={`flex-1 py-3.5 rounded-xl font-semibold text-sm shadow-md transition-colors flex items-center justify-center
-                             ${isPhoneVerified
+                             ${!ENABLE_OTP_VERIFICATION || isPhoneVerified
                       ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg cursor-pointer"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                 >

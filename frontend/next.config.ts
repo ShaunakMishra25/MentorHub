@@ -28,6 +28,13 @@ const nextConfig: NextConfig = {
         source: '/api/mentors',
         destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL}/api/mentor/mentors`,
       },
+      {
+        // Proxy frontend /api/mentors/:id to backend /api/mentor/:id
+        source: '/api/mentors/:mentorId',
+        destination: `${process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL}/api/mentor/:mentorId`,
+      },
+      // Note: /api/booking is handled by frontend API route (src/app/api/booking/route.ts)
+      // which forwards to backend with proper auth handling
     ];
   },
 };

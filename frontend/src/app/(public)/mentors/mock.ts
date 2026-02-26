@@ -33,6 +33,8 @@ export type MentorProfileNested = {
 /** Flat view used by UI components — populated by the API mapper */
 export type MentorProfile = {
   id: string;
+  /** MongoDB ObjectId - used for backend API calls */
+  mongoId?: string;
   name: string;
   profilePhoto?: string;
   profileImage?: string;
