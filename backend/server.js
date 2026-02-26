@@ -2,7 +2,12 @@ import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import app from "./src/app.js";
 
-dotenv.config();
+// Only load dotenv in local development. In production (Azure), env vars are
+// injected by the platform. Calling dotenv.config() with no .env file in
+// dotenv v17+ reports "0 vars injected" and can wipe existing process.env values.
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const startServer = async () => {
   try {

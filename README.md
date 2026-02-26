@@ -208,6 +208,14 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 - [ ] Mentor verification system
 - [ ] Mobile app
 
+## Deployment
+
+The backend is configured for deployment to **Azure Container Apps**.
+See [MIGRATE_TO_AZURE.md](docs/MIGRATE_TO_AZURE.md) for the full guide.
+
+- To provision Azure resources and deploy manually: Run `.\backend\deploy-azure.ps1`
+- Continuous Deployment is handled via GitHub Actions in `.github/workflows/deploy-azure.yml`
+
 ---
 
 ## Scripts
