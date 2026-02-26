@@ -2,6 +2,7 @@ import express from "express";
 import mentorRoutes from "./routes/mentor.routes.js";
 import mentorAuth from "./routes/mentorAuth.routes.js"
 import webhookRoutes from "./routes/webhook.routes.js";
+import bookingRoutes from "./routes/booking.route.js";
 
 const app = express();
 
@@ -20,4 +21,5 @@ app.get("/", (req, res) => {
   res.send("Server running");
 });
 
+app.use("/api/pay-now", bookingRoutes);
 export default app;
