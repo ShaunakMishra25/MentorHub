@@ -370,7 +370,7 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
         </div>
 
         {/* RIGHT COLUMN: Step 1 OR Step 2 */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-6 sticky top-8 min-h-[500px] flex flex-col">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-6 sticky top-8 min-h-full sm:min-h-[500px] flex flex-col">
 
           {/* Step 1: Calendar & Time */}
           {step === 1 && (
