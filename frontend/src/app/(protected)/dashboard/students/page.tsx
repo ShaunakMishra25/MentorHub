@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { BookOpen, Clock, TrendingUp, Mail, Users } from "lucide-react";
+import { useState, useMemo } from "react";
+import { BookOpen, Clock, TrendingUp, Mail, Users, Loader2 } from "lucide-react";
+import { useUpcomingSessions, useSessionHistory, type DashboardSession } from "@/shared/lib/hooks/useDashboard";
+import Image from "next/image";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type StudentStatus = "Active" | "On Hold" | "Completed";
 
 interface Student {
-    id: number;
+    id: string;
     name: string;
     avatar: string;
+    imageUrl?: string;
     program: string;
     sessions: number;
     progress: number;
@@ -19,16 +22,6 @@ interface Student {
     status: StudentStatus;
     email: string;
 }
-
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const students: Student[] = [
-    { id: 1, name: "Arjun Sharma", avatar: "AS", program: "Full Stack Dev", sessions: 12, progress: 68, lastSession: "Today", nextSession: "Thu, 4:00 PM", status: "Active", email: "arjun@example.com" },
-    { id: 2, name: "Priya Nair", avatar: "PN", program: "System Design", sessions: 8, progress: 45, lastSession: "2 days ago", nextSession: "Sat, 2:00 PM", status: "Active", email: "priya@example.com" },
-    { id: 3, name: "Rahul Gupta", avatar: "RG", program: "Interview Prep", sessions: 5, progress: 30, lastSession: "1 week ago", nextSession: "Pending", status: "On Hold", email: "rahul@example.com" },
-    { id: 4, name: "Sneha Pillai", avatar: "SP", program: "Machine Learning", sessions: 20, progress: 90, lastSession: "Yesterday", nextSession: "Mon, 10:00 AM", status: "Active", email: "sneha@example.com" },
-    { id: 5, name: "Vikram Mehta", avatar: "VM", program: "Career Coaching", sessions: 15, progress: 100, lastSession: "3 weeks ago", nextSession: "N/A", status: "Completed", email: "vikram@example.com" },
-];
 
 const statusColors: Record<StudentStatus, string> = {
     Active: "bg-emerald-50 text-emerald-700",
@@ -40,11 +33,94 @@ const statusColors: Record<StudentStatus, string> = {
 
 export default function StudentsPage() {
     const [search, setSearch] = useState("");
+    
+    // Fetch real data from backend
+    const { sessions: upcomingSessions, isLoading: upcomingLoading } = useUpcomingSessions();
+    const { sessions: historyData, isLoading: historyLoading } = useSessionHistory();
+    
+    const isLoading = upcomingLoading || historyLoading;
+
+    // Transform sessions data into students list
+    const students = useMemo(() => {
+        const allSessions = [...upcomingSessions, ...historyData];
+        const studentMap = new Map<string, {
+            id: string;
+            name: string;
+            imageUrl?: string;
+            sessions: DashboardSession[];
+        }>();
+
+        // Group sessions by student
+        allSessions.forEach((session) => {
+            const studentId = session.student.id;
+            if (!studentMap.has(studentId)) {
+                studentMap.set(studentId, {
+                    id: studentId,
+                    name: session.student.name,
+                    imageUrl: session.student.imageUrl,
+                    sessions: [],
+                });
+            }
+            studentMap.get(studentId)!.sessions.push(session);
+        });
+
+        // Transform to Student objects
+        return Array.from(studentMap.values()).map((data): Student => {
+            const sessionCount = data.sessions.length;
+            const completedCount = data.sessions.filter(s => s.status === "completed").length;
+            const progress = sessionCount > 0 ? Math.round((completedCount / sessionCount) * 100) : 0;
+            
+            // Find last and next sessions
+            const sortedSessions = [...data.sessions].sort((a, b) => 
+                new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
+            
+            const now = new Date();
+            const pastSessions = sortedSessions.filter(s => new Date(s.date) < now);
+            const futureSessions = sortedSessions.filter(s => new Date(s.date) >= now);
+            
+            const lastSession = pastSessions.length > 0 
+                ? getRelativeTime(new Date(pastSessions[pastSessions.length - 1].date))
+                : "N/A";
+            
+            const nextSession = futureSessions.length > 0
+                ? formatNextSession(new Date(futureSessions[0].date), futureSessions[0].startTime)
+                : "N/A";
+
+            // Determine status
+            let status: StudentStatus = "Active";
+            if (futureSessions.length === 0 && completedCount > 0) {
+                status = "Completed";
+            } else if (futureSessions.length === 0 && pastSessions.length > 0) {
+                const lastDate = new Date(pastSessions[pastSessions.length - 1].date);
+                const daysSinceLastSession = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+                if (daysSinceLastSession > 14) {
+                    status = "On Hold";
+                }
+            }
+
+            return {
+                id: data.id,
+                name: data.name,
+                avatar: data.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase(),
+                imageUrl: data.imageUrl,
+                program: "Mentorship",
+                sessions: sessionCount,
+                progress,
+                lastSession,
+                nextSession,
+                status,
+                email: "", // Email not available from session data
+            };
+        });
+    }, [upcomingSessions, historyData]);
+
     const filtered = students.filter(
         (s) =>
             s.name.toLowerCase().includes(search.toLowerCase()) ||
             s.program.toLowerCase().includes(search.toLowerCase())
     );
+    
     const active = students.filter((s) => s.status === "Active").length;
     const completed = students.filter((s) => s.status === "Completed").length;
     const totalSess = students.reduce((acc, s) => acc + s.sessions, 0);
@@ -145,10 +221,38 @@ export default function StudentsPage() {
                 {filtered.length === 0 && (
                     <div className="text-center py-16 text-slate-400">
                         <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                        <p className="font-medium">No students found</p>
+                        <p className="font-medium">{isLoading ? "Loading students..." : "No students found"}</p>
                     </div>
                 )}
             </div>
         </div>
     );
+}
+
+// Helper functions
+function getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 14) return "1 week ago";
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return `${Math.floor(diffDays / 30)} months ago`;
+}
+
+function formatNextSession(date: Date, time: string): string {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (date.toDateString() === now.toDateString()) {
+        return `Today, ${time}`;
+    }
+    if (date.toDateString() === tomorrow.toDateString()) {
+        return `Tomorrow, ${time}`;
+    }
+    return `${date.toLocaleDateString("en-US", { weekday: "short" })}, ${time}`;
 }

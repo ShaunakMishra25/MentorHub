@@ -1,43 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Calendar as CalendarIcon, Clock, MapPin, Video,
-    ChevronRight, ChevronLeft, RotateCcw, User,
+    ChevronRight, ChevronLeft, RotateCcw, User, Loader2,
 } from "lucide-react";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import FadeIn from "@/components/dashboard-ui/FadeIn";
+import { useUpcomingSessions, useSessionHistory, type DashboardSession } from "@/shared/lib/hooks/useDashboard";
 
-interface UpcomingSession {
-    id: number; student: string; time: string; date: Date;
-    topic: string; duration: string; status: "In progress" | "Upcoming"; progress: number;
-}
-
-interface MentoringHour { name: string; hours: number; }
 interface Notification { id: string; message: string; }
-
-const sessions: UpcomingSession[] = [
-    { id: 1, student: "Arjun Sharma", time: "Today, 2:00 PM", date: new Date(), topic: "React Performance Tuning", duration: "60 min", status: "In progress", progress: 84 },
-    { id: 2, student: "Priya Nair", time: "Tomorrow, 10:00 AM", date: new Date(Date.now() + 86400000), topic: "System Design Interview", duration: "45 min", status: "Upcoming", progress: 0 },
-    { id: 3, student: "Rahul Gupta", time: "Thu, 4:30 PM", date: new Date(Date.now() + 172800000), topic: "Resume Review", duration: "30 min", status: "Upcoming", progress: 0 },
-    { id: 4, student: "Sneha Pillai", time: "Sat, 11:00 AM", date: new Date(Date.now() + 345600000), topic: "Career Guidance", duration: "60 min", status: "Upcoming", progress: 0 },
-];
-
-const hours: MentoringHour[] = [
-    { name: "Mon", hours: 2.5 }, { name: "Tue", hours: 3.0 }, { name: "Wed", hours: 4.5 },
-    { name: "Thu", hours: 2.0 }, { name: "Fri", hours: 5.0 }, { name: "Sat", hours: 6.5 }, { name: "Sun", hours: 1.5 },
-];
-
-const sessionDates = sessions.map((s) => s.date.toDateString());
 
 function isToday(d: Date) {
     const t = new Date();
     return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
 }
 
-function MiniCalendar({ selected, onChange }: { selected: Date; onChange: (d: Date) => void }) {
+function MiniCalendar({ selected, onChange, sessionDates }: { selected: Date; onChange: (d: Date) => void; sessionDates: string[] }) {
     const [view, setView] = useState(new Date(selected));
     const y = view.getFullYear(), m = view.getMonth();
     const first = new Date(y, m, 1).getDay();
@@ -88,7 +69,96 @@ export default function SessionsPage() {
     const [selected, setSelected] = useState(new Date());
     const [notif, setNotif] = useState<Notification | null>(null);
 
+    // Fetch real data from backend
+    const { sessions: upcomingSessions, isLoading: upcomingLoading, count: upcomingCount } = useUpcomingSessions();
+    const { sessions: historyData, isLoading: historyLoading } = useSessionHistory();
+
+    const isLoading = upcomingLoading || historyLoading;
+
+    // Get session dates for calendar dots
+    const sessionDates = useMemo(() => {
+        return upcomingSessions.map((s) => new Date(s.date).toDateString());
+    }, [upcomingSessions]);
+
+    // Transform sessions for display
+    const sessions = useMemo(() => {
+        return upcomingSessions.map((s, index) => {
+            const sessionDate = new Date(s.date);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            let timeLabel = "";
+            if (sessionDate.toDateString() === today.toDateString()) {
+                timeLabel = `Today, ${s.startTime}`;
+            } else if (sessionDate.toDateString() === tomorrow.toDateString()) {
+                timeLabel = `Tomorrow, ${s.startTime}`;
+            } else {
+                timeLabel = `${sessionDate.toLocaleDateString("en-US", { weekday: "short" })}, ${s.startTime}`;
+            }
+
+            // Determine status based on date/time
+            const now = new Date();
+            const sessionDateTime = new Date(s.date);
+            const [hours, minutes] = s.startTime.split(":").map(Number);
+            sessionDateTime.setHours(hours, minutes);
+
+            let status: "In progress" | "Upcoming" = "Upcoming";
+            if (s.status === "confirmed" && sessionDateTime <= now) {
+                status = "In progress";
+            }
+
+            return {
+                id: s.bookingId || `session-${index}`,
+                student: s.student.name,
+                studentImage: s.student.imageUrl,
+                time: timeLabel,
+                date: sessionDate,
+                topic: `Session with ${s.mentor.name}`,
+                duration: `${s.duration} min`,
+                status,
+                progress: status === "In progress" ? 84 : 0,
+                meetingLink: s.meetingLink,
+            };
+        });
+    }, [upcomingSessions]);
+
+    // Filter sessions for selected date
     const todaySessions = sessions.filter((s) => s.date.toDateString() === selected.toDateString());
+
+    // Calculate mentoring hours per day (from history)
+    const hours = useMemo(() => {
+        const dayHours: Record<string, number> = {
+            Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+        };
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+        // Add hours from completed sessions this week
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        
+        [...historyData, ...upcomingSessions].forEach((s) => {
+            const sessionDate = new Date(s.date);
+            if (sessionDate >= weekStart) {
+                const dayName = dayNames[sessionDate.getDay()];
+                dayHours[dayName] += (s.duration || 60) / 60;
+            }
+        });
+
+        return [
+            { name: "Mon", hours: dayHours.Mon },
+            { name: "Tue", hours: dayHours.Tue },
+            { name: "Wed", hours: dayHours.Wed },
+            { name: "Thu", hours: dayHours.Thu },
+            { name: "Fri", hours: dayHours.Fri },
+            { name: "Sat", hours: dayHours.Sat },
+            { name: "Sun", hours: dayHours.Sun },
+        ];
+    }, [historyData, upcomingSessions]);
+
+    // Total completed sessions
+    const totalCompleted = historyData.filter(s => s.status === "completed").length;
+
     const show = (id: string, msg: string) => { setNotif({ id, message: msg }); setTimeout(() => setNotif(null), 3000); };
 
     return (
@@ -203,7 +273,7 @@ export default function SessionsPage() {
                 <div className="lg:col-span-4 flex flex-col gap-6">
                     <FadeIn delay={0.2}>
                         <div className="bg-white rounded-3xl shadow-card border border-slate-200 p-6 hover:shadow-card-hover hover:-translate-y-1 transition-all">
-                            <MiniCalendar selected={selected} onChange={setSelected} />
+                            <MiniCalendar selected={selected} onChange={setSelected} sessionDates={sessionDates} />
                         </div>
                     </FadeIn>
                     <FadeIn delay={0.3}>
@@ -211,7 +281,7 @@ export default function SessionsPage() {
                             <div className="absolute top-0 right-0 p-4 opacity-10"><CalendarIcon className="w-24 h-24" /></div>
                             <p className="text-slate-300 text-sm font-medium mb-1 relative z-10">Total Mentoring Impact</p>
                             <div className="flex items-end gap-3 relative z-10">
-                                <span className="text-4xl font-extrabold">142</span>
+                                <span className="text-4xl font-extrabold">{totalCompleted}</span>
                                 <span className="text-slate-400 text-sm mb-1">completed sessions</span>
                             </div>
                         </div>

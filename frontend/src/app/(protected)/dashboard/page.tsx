@@ -3,10 +3,11 @@
 //   • useNavigate → useRouter (next/navigation)
 //   • useMentor context → useUser from @clerk/nextjs  (mentor.name, etc.)
 //   • "use client" added because hooks are used
+//   • Connected to real backend API via useDashboard hooks
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
     TrendingUp,
@@ -17,6 +18,7 @@ import {
     ArrowUpRight,
     MoreVertical,
     Wallet,
+    Loader2,
 } from "lucide-react";
 import {
     ComposedChart,
@@ -30,23 +32,7 @@ import {
 } from "recharts";
 import { useUser } from "@clerk/nextjs";
 import FadeIn from "@/components/dashboard-ui/FadeIn";
-
-// ── Mock data (verbatim from Dashboard.jsx) ───────────────────────────────────
-
-const earningData = [
-    { name: "Jan", earnings: 1200 },
-    { name: "Feb", earnings: 1900 },
-    { name: "Mar", earnings: 1500 },
-    { name: "Apr", earnings: 2200 },
-    { name: "May", earnings: 2800 },
-    { name: "Jun", earnings: 3400 },
-];
-
-const upcomingSessions = [
-    { id: 1, student: "Sarah Jenkins", time: "Today, 2:00 PM", topic: "React Performance Tuning" },
-    { id: 2, student: "Marcus Cole", time: "Tomorrow, 10:00 AM", topic: "System Design Interview" },
-    { id: 3, student: "Elena Rodriguez", time: "Thu, 4:30 PM", topic: "Resume Review" },
-];
+import { useUpcomingSessions, useDashboardStats, useSessionHistory } from "@/shared/lib/hooks/useDashboard";
 
 // ── Tooltip (verbatim from Dashboard.jsx) ─────────────────────────────────────
 
@@ -74,13 +60,88 @@ export default function Dashboard() {
     const [notification, setNotification] = useState<{ id: string; message: string } | null>(null);
     const [chartVisible, setChartVisible] = useState(false);
 
-    // Fallback values (verbatim from Dashboard.jsx)
+    // Fetch real data from backend
+    const { sessions: upcomingSessionsData, isLoading: sessionsLoading } = useUpcomingSessions();
+    const { sessions: historyData } = useSessionHistory();
+    const { completedSessions, totalEarnings, activeStudents, isLoading: statsLoading } = useDashboardStats();
+
+    // Calculate earnings data for chart from history
+    const earningData = useMemo(() => {
+        if (historyData.length === 0) {
+            // Return mock data if no history
+            return [
+                { name: "Jan", earnings: 0 },
+                { name: "Feb", earnings: 0 },
+                { name: "Mar", earnings: 0 },
+                { name: "Apr", earnings: 0 },
+                { name: "May", earnings: 0 },
+                { name: "Jun", earnings: 0 },
+            ];
+        }
+
+        // Group earnings by month
+        const monthlyEarnings: Record<string, number> = {};
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        
+        historyData.forEach((session) => {
+            if (session.status === "completed" && session.price) {
+                const date = new Date(session.date);
+                const monthName = months[date.getMonth()];
+                monthlyEarnings[monthName] = (monthlyEarnings[monthName] || 0) + session.price;
+            }
+        });
+
+        // Get last 6 months
+        const currentMonth = new Date().getMonth();
+        const last6Months = [];
+        for (let i = 5; i >= 0; i--) {
+            const monthIndex = (currentMonth - i + 12) % 12;
+            const monthName = months[monthIndex];
+            last6Months.push({
+                name: monthName,
+                earnings: monthlyEarnings[monthName] || 0,
+            });
+        }
+
+        return last6Months;
+    }, [historyData]);
+
+    // Transform upcoming sessions for display
+    const upcomingSessions = useMemo(() => {
+        return upcomingSessionsData.slice(0, 3).map((session, index) => {
+            const sessionDate = new Date(session.date);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            let timeLabel = "";
+            if (sessionDate.toDateString() === today.toDateString()) {
+                timeLabel = `Today, ${session.startTime}`;
+            } else if (sessionDate.toDateString() === tomorrow.toDateString()) {
+                timeLabel = `Tomorrow, ${session.startTime}`;
+            } else {
+                timeLabel = `${sessionDate.toLocaleDateString("en-US", { weekday: "short" })}, ${session.startTime}`;
+            }
+
+            return {
+                id: session.bookingId || index + 1,
+                student: session.student.name,
+                time: timeLabel,
+                topic: `${session.duration} min session`,
+            };
+        });
+    }, [upcomingSessionsData]);
+
+    // Calculate wallet balance (mock for now - would need payment integration)
+    const walletBalance = "0.00";
+
+    // Fallback values merged with real data
     const mentor = {
         name: user?.firstName ?? "Mentor",
-        totalEarnings: "13,000",
-        walletBalance: "2,850.00",
-        activeStudents: 24,
-        sessionsCompleted: 142,
+        totalEarnings: totalEarnings.toLocaleString("en-IN"),
+        walletBalance,
+        activeStudents,
+        sessionsCompleted: completedSessions,
         rating: "4.9",
         responseTime: "2h",
     };
@@ -96,6 +157,8 @@ export default function Dashboard() {
             showNotification("share", "Link copied to clipboard!");
         });
     };
+
+    const isLoading = sessionsLoading || statsLoading;
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
