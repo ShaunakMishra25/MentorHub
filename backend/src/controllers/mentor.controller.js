@@ -1,4 +1,4 @@
-import User from "../models/user.js";
+import User from "../models/User.js";
 import { generateAvailabilityMatrix } from "../utils/availabilityMatrix.js";
 
 export const getMentors = async (req, res) => {
@@ -34,8 +34,8 @@ export const getMentorProfile = async (req, res) => {
       _id: mentorId,
       role: "mentor"
     })
-    .select("-clerkId")
-    .lean();
+      .select("-clerkId")
+      .lean();
     if (!mentor) {
       return res.status(404).json({
         success: false,
@@ -116,7 +116,7 @@ export const updateMentorProfile = async (req, res) => {
         runValidators: true
       }
     )
-    .select(`
+      .select(`
       name
       username
       email
@@ -125,7 +125,7 @@ export const updateMentorProfile = async (req, res) => {
       mentorProfile
       isProfileComplete
     `)
-    .lean();
+      .lean();
     res.status(200).json({
       success: true,
       msg: "Mentor profile updated successfully",
@@ -254,8 +254,8 @@ export const upcomingSessions = async (req, res) => {
       bookingId: s._id,
       date:
         new Date(s.sessionDate)
-        .toISOString()
-        .split("T")[0],
+          .toISOString()
+          .split("T")[0],
       startTime: s.startTime,
       endTime: s.endTime,
       duration: s.sessionDuration,
@@ -287,7 +287,7 @@ export const upcomingSessions = async (req, res) => {
   }
 };
 
-import User from "../models/user.js";
+
 const generateUpcomingSessionsFromAvailability = (availability) => {
   const today = new Date();
   const sessions = [];
@@ -365,7 +365,7 @@ export const saveAvailability = async (req, res) => {
       );
     const bookedSessions =
       mentor.mentorProfile.upcomingSessions
-      ?.filter(s => s.isBooked) || [];
+        ?.filter(s => s.isBooked) || [];
 
     mentor.mentorProfile.upcomingSessions = [
       ...bookedSessions,
@@ -427,14 +427,14 @@ export const getSessionHistory = async (req, res) => {
       .populate("student", "name imageUrl")
       .sort({ sessionDate: -1, startTime: -1 })
       .lean();
-   const history = sessions.map(session => ({
+    const history = sessions.map(session => ({
 
       bookingId: session._id,
 
       date:
         new Date(session.sessionDate)
-        .toISOString()
-        .split("T")[0],
+          .toISOString()
+          .split("T")[0],
 
       startTime: session.startTime,
       endTime: session.endTime,
