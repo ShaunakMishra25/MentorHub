@@ -11,4 +11,7 @@ export const protect = (req, res, next) => {
   } catch {
     res.status(401).json({ msg: "Invalid token" });
   }
+
 };
+
+export default protect;

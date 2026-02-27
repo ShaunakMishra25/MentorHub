@@ -1,4 +1,4 @@
-import User from "../models/user.js";
+import User from "../models/User.js";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 
 export const becomeMentor = async (req, res) => {
@@ -35,7 +35,7 @@ export const becomeMentor = async (req, res) => {
     await user.save();
 
     await clerkClient.users.updateUser(clerkId, {
-      publicMetadata: { role: "mentor"},
+      publicMetadata: { role: "mentor" },
     });
 
     res.status(200).json({
