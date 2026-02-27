@@ -1,4 +1,4 @@
-import User from "../models/User.js";
+import User from "../models/user.js";
 import { generateAvailabilityMatrix } from "../utils/availabilityMatrix.js";
 
 export const getMentors = async (req, res) => {
