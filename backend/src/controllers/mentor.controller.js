@@ -7,26 +7,43 @@ export const getMentors = async (req, res) => {
     const limit = 20;
     const skip = (page - 1) * limit;
 
+    // DB-level filter: Only verified mentors
+    const filter = {
+      role: "mentor",
+      "mentorProfile.verification.isVerified": true
+    };
+    
     const [mentors, totalMentors] = await Promise.all([
-      User.find({ role: "mentor" })
-        .select("name username imageUrl mentorProfile.basicInfo mentorProfile.pricing mentorProfile.rating")
+      User.find(filter)
+        .select("name username imageUrl mentorProfile")
         .skip(skip)
         .limit(limit)
         .lean(),
-      User.countDocuments({ role: "mentor" })
+      User.countDocuments(filter)
     ]);
 
+    const sanitizedMentors = mentors.map(mentor => {
+      if (mentor.mentorProfile?.verification) {
+        const verification = { ...mentor.mentorProfile.verification };
+        delete verification.idNumber;
+        mentor.mentorProfile.verification = verification;
+      }
+      return mentor;
+    });
+    
     res.status(200).json({
       success: true,
       page,
       totalMentors,
       totalPages: Math.ceil(totalMentors / limit),
-      mentors
+      mentors: sanitizedMentors
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, msg: "Server error" });
+    res.status(500).json({ 
+      success: false, 
+      msg: "Failed to fetch mentors"
+    });
   }
 };
 
@@ -35,14 +52,15 @@ export const getMentorProfile = async (req, res) => {
     const { mentorId } = req.params;
     const mentor = await User.findOne({
       _id: mentorId,
-      role: "mentor"
+      role: "mentor",
+      "mentorProfile.verification.isVerified": true
     })
-      .select("-clerkId")
+      .select("-clerkId -mentorProfile.verification.idNumber")
       .lean();
     if (!mentor) {
       return res.status(404).json({
         success: false,
-        msg: "Mentor not found"
+        msg: "Mentor not found or not verified"
       });
     }
     const availabilityMatrix =
@@ -132,7 +150,11 @@ export const searchMentors = async (req, res) => {
       maxExperience
     } = req.query;
 
-    let filter = { role: "mentor" };
+    // DB-level filter: Only verified mentors
+    let filter = { 
+      role: "mentor",
+      "mentorProfile.verification.isVerified": true
+    };
 
     if (q?.trim()) {
       filter.$text = { $search: q.trim() };
@@ -158,11 +180,14 @@ export const searchMentors = async (req, res) => {
       if (maxExperience) filter["mentorProfile.basicInfo.workExperience"].$lte = Number(maxExperience);
     }
 
+    let query = User.find(filter);
+    
+    if (q) {
+      query = query.select({ score: { $meta: "textScore" } });
+    }
+    
     const [mentors, total] = await Promise.all([
-      User.find(
-        filter,
-        q ? { score: { $meta: "textScore" } } : {}
-      )
+      query
         .sort(q ? { score: { $meta: "textScore" } } : { "mentorProfile.rating": -1 })
         .skip(skip)
         .limit(limit)
@@ -170,16 +195,24 @@ export const searchMentors = async (req, res) => {
       User.countDocuments(filter)
     ]);
 
+    const sanitizedMentors = mentors.map(mentor => {
+      if (mentor.mentorProfile?.verification) {
+        const verification = { ...mentor.mentorProfile.verification };
+        delete verification.idNumber;
+        mentor.mentorProfile.verification = verification;
+      }
+      return mentor;
+    });
+
     res.status(200).json({
       success: true,
       total,
       page,
       totalPages: Math.ceil(total / limit),
-      data: mentors
+      data: sanitizedMentors
     });
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ success: false, msg: "Server error" });
   }
 };

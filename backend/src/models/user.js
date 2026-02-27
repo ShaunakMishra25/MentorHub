@@ -234,6 +234,25 @@ const UserSchema = new mongoose.Schema({
     totalReviews: {
       type: Number,
       default: 0
+    },
+
+    verification: {
+      idType: {
+        type: String,
+        enum: ["aadhaar", "pan", "passport", "driving_license"],
+        trim: true
+      },
+      idNumber: {
+        type: String,
+        trim: true
+      },
+      isVerified: {
+        type: Boolean,
+        default: false,
+        index: true
+      },
+      verifiedAt: Date,
+      verifiedBy: String
     }
 
   },
