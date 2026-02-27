@@ -33,10 +33,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { to: "/dashboard/profile", icon: User, label: "My Profile" },
-    { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
-    { to: "/dashboard/sessions", icon: Calendar, label: "Sessions" },
-    { to: "/dashboard/availability", icon: Clock, label: "Availability" },
+    { to: "/mentor/profile", icon: User, label: "My Profile" },
+    { to: "/mentor/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
+    { to: "/mentor/sessions", icon: Calendar, label: "Sessions" },
+    { to: "/mentor/availability", icon: Clock, label: "Availability" },
 ];
 
 export default function DashboardSidebar({
@@ -121,14 +121,14 @@ export default function DashboardSidebar({
                 <div className={`px-4 sm:px-5 pb-5 sm:pb-6 ${isCollapsed ? "md:px-2" : ""}`}>
                     <div
                         onClick={() => {
-                            router.push("/dashboard/profile");
+                            router.push("/mentor/profile");
                             setIsMobileMenuOpen(false);
                         }}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
-                                router.push("/dashboard/profile");
+                                router.push("/mentor/profile");
                                 setIsMobileMenuOpen(false);
                             }
                         }}

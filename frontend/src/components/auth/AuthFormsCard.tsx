@@ -29,7 +29,7 @@ export default function AuthFormsCard({ initialView }: AuthFormsCardProps) {
             setIsRedirecting(true);
             const role = user.publicMetadata?.role as string | undefined;
             if (role === "mentor" && redirectUrl === "/") {
-                router.push("/dashboard/mentor");
+                router.push("/mentor/dashboard");
             } else {
                 router.push(redirectUrl);
             }
@@ -119,7 +119,7 @@ export default function AuthFormsCard({ initialView }: AuthFormsCardProps) {
             const result = await signUp.attemptEmailAddressVerification({ code });
             if (result.status === "complete") {
                 await setSignUpActive({ session: result.createdSessionId });
-                router.push(view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/dashboard/student/dashboard");
+                router.push(view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/profile");
             } else {
                 setSignUpError("Verification incomplete. Please try again.");
             }
@@ -135,7 +135,7 @@ export default function AuthFormsCard({ initialView }: AuthFormsCardProps) {
         signUp.authenticateWithRedirect({
             strategy: "oauth_google",
             redirectUrl: "/sso-callback",
-            redirectUrlComplete: view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/dashboard/student/dashboard",
+            redirectUrlComplete: view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/profile",
         });
     };
 

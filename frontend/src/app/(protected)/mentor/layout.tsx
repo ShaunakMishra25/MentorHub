@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import DashboardSidebar from "@/components/dashboard-ui/DashboardSidebar";
 
-export default async function DashboardLayout({
+export default async function MentorLayout({
     children,
 }: {
     children: React.ReactNode;

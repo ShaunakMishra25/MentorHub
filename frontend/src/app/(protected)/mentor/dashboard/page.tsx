@@ -152,7 +152,7 @@ export default function Dashboard() {
     };
 
     const handleShareProfile = () => {
-        const url = `${window.location.origin}/dashboard/preview`;
+        const url = `${window.location.origin}/mentor/profile`;
         navigator.clipboard.writeText(url).then(() => {
             showNotification("share", "Link copied to clipboard!");
         });
@@ -359,7 +359,7 @@ export default function Dashboard() {
                             </div>
 
                             <button
-                                onClick={() => navigate.push("/dashboard/sessions")}
+                                onClick={() => navigate.push("/mentor/sessions")}
                                 className="w-full mt-5 sm:mt-6 py-3 px-4 border-2 border-slate-100 hover:border-slate-200 active:bg-slate-50 text-slate-600 font-bold rounded-xl sm:rounded-2xl transition-all"
                             >
                                 View Calendar

@@ -6,9 +6,9 @@ import Navbar from "./Navbar";
 export default function ConditionalNavbar() {
     const pathname = usePathname();
 
-    // Hide the navbar on dashboard, onboarding, and admin routes
+    // Hide the navbar on mentor dashboard, onboarding, and admin routes
     if (
-        pathname?.startsWith("/dashboard") ||
+        pathname?.startsWith("/mentor") ||
         pathname?.startsWith("/onboarding") ||
         pathname?.startsWith("/admin")
     ) {

@@ -72,7 +72,7 @@ export default function ConfirmClient({ mentor, sessionDate, sessionTime, price 
 
       if (data.success) {
         // Redirect to session/booking details page
-        router.push(`/dashboard/sessions?booking=${data.booking?._id || 'success'}`);
+        router.push(`/session/${data.booking?._id || 'success'}`);
       } else {
         setError(data.msg || data.error || "Booking failed. Please try again.");
         setProcessing(false);
