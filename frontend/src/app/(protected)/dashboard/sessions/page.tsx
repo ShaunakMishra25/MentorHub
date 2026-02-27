@@ -261,45 +261,21 @@ export default function SessionsPage() {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-<<<<<<< HEAD
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12, fontWeight: 600 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} tickFormatter={(v: any) => `${v}h`} />
-                                    <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0/.1)", padding: "12px 16px", fontWeight: "bold", color: "#1e293b" }} formatter={(v: any) => [`${v} hours`, "Mentored"]} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} tickFormatter={(v: number) => `${v}h`} />
+                                    <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0/.1)", padding: "12px 16px", fontWeight: "bold", color: "#1e293b" }} formatter={(v: number) => [`${v} hours`, "Mentored"]} />
                                     <Bar dataKey="hours" fill="url(#bg2)" radius={[6, 6, 6, 6]} barSize={36} />
-=======
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={(v: number) => `${v}h`} />
-                                    <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0/.1)", padding: "12px 16px", fontWeight: "bold", color: "#1e293b" }} formatter={(v: number | undefined) => [`${v ?? 0} hours`, "Mentored"]} />
-                                    <Bar dataKey="hours" fill="url(#bg2)" radius={[6, 6, 6, 6]} barSize={28} />
->>>>>>> 1684c29 (Changes in the Dashboard)
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </FadeIn>
                 </div>
 
-<<<<<<< HEAD
                 {/* Right */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                    <FadeIn delay={0.2}>
-                        <div className="bg-white rounded-3xl shadow-card border border-slate-200 p-6 hover:shadow-card-hover hover:-translate-y-1 transition-all">
-                            <MiniCalendar selected={selected} onChange={setSelected} sessionDates={sessionDates} />
-                        </div>
-                    </FadeIn>
-                    <FadeIn delay={0.3}>
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border border-slate-800 p-8 text-white relative overflow-hidden h-40 flex flex-col justify-center">
-                            <div className="absolute top-0 right-0 p-4 opacity-10"><CalendarIcon className="w-24 h-24" /></div>
-                            <p className="text-slate-300 text-sm font-medium mb-1 relative z-10">Total Mentoring Impact</p>
-                            <div className="flex items-end gap-3 relative z-10">
-                                <span className="text-4xl font-extrabold">{totalCompleted}</span>
-                                <span className="text-slate-400 text-sm mb-1">completed sessions</span>
-=======
-                {/* Right sidebar — Mobile: horizontal scroll or stacked, Desktop: fixed sidebar */}
                 <div className="lg:col-span-4 flex flex-col gap-5 md:gap-6">
-                    {/* Calendar — show first on mobile for quick date selection */}
                     <FadeIn delay={0.2} className="order-first lg:order-none">
                         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-card border border-slate-200 p-4 sm:p-6 hover:shadow-card-hover hover:-translate-y-1 transition-all">
-                            <MiniCalendar selected={selected} onChange={setSelected} />
+                            <MiniCalendar selected={selected} onChange={setSelected} sessionDates={sessionDates} />
                         </div>
                     </FadeIn>
                     <FadeIn delay={0.3}>
@@ -307,9 +283,8 @@ export default function SessionsPage() {
                             <div className="absolute top-0 right-0 p-4 opacity-10"><CalendarIcon className="w-20 h-20 sm:w-24 sm:h-24" /></div>
                             <p className="text-slate-300 text-xs sm:text-sm font-medium mb-1 relative z-10">Total Mentoring Impact</p>
                             <div className="flex items-end gap-2 sm:gap-3 relative z-10">
-                                <span className="text-3xl sm:text-4xl font-extrabold">142</span>
+                                <span className="text-3xl sm:text-4xl font-extrabold">{totalCompleted}</span>
                                 <span className="text-slate-400 text-xs sm:text-sm mb-0.5 sm:mb-1">completed sessions</span>
->>>>>>> 1684c29 (Changes in the Dashboard)
                             </div>
                         </div>
                     </FadeIn>
