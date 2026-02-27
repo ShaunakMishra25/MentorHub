@@ -4,7 +4,7 @@ import protect from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", protect, createBooking);
+router.post("/",protect, createBooking);
 
 
 export default router;

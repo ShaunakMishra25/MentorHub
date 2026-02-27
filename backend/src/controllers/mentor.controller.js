@@ -3,27 +3,30 @@ import { generateAvailabilityMatrix } from "../utils/availabilityMatrix.js";
 
 export const getMentors = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = Number(req.query.page) || 1;
     const limit = 20;
     const skip = (page - 1) * limit;
-    const mentors = await User.find({ role: "mentor" })
-      .select("-password")
-      .skip(skip)
-      .limit(limit);
-    const totalMentors = await User.countDocuments({ role: "mentor" });
+
+    const [mentors, totalMentors] = await Promise.all([
+      User.find({ role: "mentor" })
+        .select("name username imageUrl mentorProfile.basicInfo mentorProfile.pricing mentorProfile.rating")
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments({ role: "mentor" })
+    ]);
+
     res.status(200).json({
       success: true,
       page,
-      limit,
       totalMentors,
       totalPages: Math.ceil(totalMentors / limit),
       mentors
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
+    console.error(error);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 
@@ -65,17 +68,20 @@ export const getMentorProfile = async (req, res) => {
 
 export const updateMentorProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const existingUser = await User.findOne({
-      _id: userId,
+    const clerkId = req.auth.userId;
+
+    const mentor = await User.findOne({
+      clerkId,
       role: "mentor"
-    }).select("_id role mentorProfile");
-    if (!existingUser) {
+    });
+
+    if (!mentor) {
       return res.status(404).json({
         success: false,
-        msg: "Mentor not found or access denied"
+        msg: "Mentor not found"
       });
     }
+
     const {
       basicInfo,
       professionalInfo,
@@ -85,64 +91,37 @@ export const updateMentorProfile = async (req, res) => {
       bio,
       languages
     } = req.body;
-    let updateFields = {};
-    if (basicInfo) {
-      updateFields["mentorProfile.basicInfo"] = basicInfo;
-    }
-    if (professionalInfo) {
-      updateFields["mentorProfile.professionalInfo"] = professionalInfo;
-    }
-    if (expertise) {
-      updateFields["mentorProfile.expertise"] = expertise;
-    }
-    if (availability) {
-      updateFields["mentorProfile.availability"] = availability;
-    }
-    if (pricing) {
-      updateFields["mentorProfile.pricing"] = pricing;
-    }
-    if (bio !== undefined) {
-      updateFields["mentorProfile.bio"] = bio;
-    }
-    if (languages !== undefined) {
-      updateFields["mentorProfile.languages"] = languages;
-    }
-    updateFields["isProfileComplete"] = true;
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateFields },
-      {
-        new: true,
-        runValidators: true
-      }
-    )
-      .select(`
-      name
-      username
-      email
-      imageUrl
-      role
-      mentorProfile
-      isProfileComplete
-    `)
-      .lean();
+
+    if (basicInfo) mentor.mentorProfile.basicInfo = basicInfo;
+    if (professionalInfo) mentor.mentorProfile.professionalInfo = professionalInfo;
+    if (expertise) mentor.mentorProfile.expertise = expertise;
+    if (availability) mentor.mentorProfile.availability = availability;
+    if (pricing) mentor.mentorProfile.pricing = pricing;
+    if (bio !== undefined) mentor.mentorProfile.bio = bio;
+    if (languages !== undefined) mentor.mentorProfile.languages = languages;
+
+    mentor.isProfileComplete = true;
+
+    await mentor.save();
+
     res.status(200).json({
       success: true,
-      msg: "Mentor profile updated successfully",
-      mentor: updatedUser
+      msg: "Profile updated",
+      mentor
     });
-  }
-  catch (error) {
-    console.error("Update Mentor Profile Error:", error);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 
 export const searchMentors = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     const {
       q,
       industry,
@@ -150,77 +129,58 @@ export const searchMentors = async (req, res) => {
       minPrice,
       maxPrice,
       minExperience,
-      maxExperience,
-      page = 1,
-      limit = 20
+      maxExperience
     } = req.query;
-    const skip = (page - 1) * limit;
-    let filter = {
-      role: "mentor",
-    };
-    if (q && q.trim() !== "") {
-      filter.$text = {
-        $search: q.trim()
-      };
+
+    let filter = { role: "mentor" };
+
+    if (q?.trim()) {
+      filter.$text = { $search: q.trim() };
     }
+
     if (industry) {
       filter["mentorProfile.basicInfo.industry"] = industry;
     }
+
     if (college) {
       filter["mentorProfile.professionalInfo.college"] = college;
     }
+
     if (minPrice || maxPrice) {
       filter["mentorProfile.pricing.pricePerSession"] = {};
-      if (minPrice)
-        filter["mentorProfile.pricing.pricePerSession"].$gte = Number(minPrice);
-      if (maxPrice)
-        filter["mentorProfile.pricing.pricePerSession"].$lte = Number(maxPrice);
+      if (minPrice) filter["mentorProfile.pricing.pricePerSession"].$gte = Number(minPrice);
+      if (maxPrice) filter["mentorProfile.pricing.pricePerSession"].$lte = Number(maxPrice);
     }
+
     if (minExperience || maxExperience) {
       filter["mentorProfile.basicInfo.workExperience"] = {};
-      if (minExperience)
-        filter["mentorProfile.basicInfo.workExperience"].$gte = Number(minExperience);
-      if (maxExperience)
-        filter["mentorProfile.basicInfo.workExperience"].$lte = Number(maxExperience);
+      if (minExperience) filter["mentorProfile.basicInfo.workExperience"].$gte = Number(minExperience);
+      if (maxExperience) filter["mentorProfile.basicInfo.workExperience"].$lte = Number(maxExperience);
     }
-    const mentors = await User.find(
-      filter,
-      q ? { score: { $meta: "textScore" } } : {}
-    )
-      .sort(q
-        ? { score: { $meta: "textScore" } }
-        : { "mentorProfile.rating": -1 }
-      )
-      .select(`
-        name
-        username
-        imageUrl
-        mentorProfile.basicInfo
-        mentorProfile.professionalInfo
-        mentorProfile.pricing
-        mentorProfile.expertise
-        mentorProfile.rating
-      `)
-      .skip(skip)
-      .limit(Number(limit))
-      .lean();
 
-    const total = await User.countDocuments(filter);
+    const [mentors, total] = await Promise.all([
+      User.find(
+        filter,
+        q ? { score: { $meta: "textScore" } } : {}
+      )
+        .sort(q ? { score: { $meta: "textScore" } } : { "mentorProfile.rating": -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter)
+    ]);
+
     res.status(200).json({
       success: true,
-      count: mentors.length,
       total,
-      page: Number(page),
+      page,
       totalPages: Math.ceil(total / limit),
       data: mentors
     });
-  }
-  catch (error) {
-    console.error("Search Mentors Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 
@@ -337,61 +297,52 @@ const generateUpcomingSessionsFromAvailability = (availability) => {
 
 export const saveAvailability = async (req, res) => {
   try {
-    const mentorId = req.user.id;
+    const clerkId = req.auth.userId;
     const { availability } = req.body;
-    if (!availability || availability.length === 0) {
+
+    if (!availability?.length) {
       return res.status(400).json({
         success: false,
         msg: "Availability required"
       });
     }
+
     const mentor = await User.findOne({
-      _id: mentorId,
+      clerkId,
       role: "mentor"
     });
+
     if (!mentor) {
       return res.status(404).json({
         success: false,
         msg: "Mentor not found"
       });
-
     }
-    mentor.mentorProfile.availability =
-      availability;
+
+    mentor.mentorProfile.availability = availability;
 
     const newSessions =
-      generateUpcomingSessionsFromAvailability(
-        availability
-      );
+      generateUpcomingSessionsFromAvailability(availability);
+
+    // Only future + unbooked sessions regenerated
     const bookedSessions =
-      mentor.mentorProfile.upcomingSessions
-        ?.filter(s => s.isBooked) || [];
+      mentor.mentorProfile.upcomingSessions.filter(s => s.isBooked);
 
     mentor.mentorProfile.upcomingSessions = [
       ...bookedSessions,
-      ...newSessions.filter(newSession =>
-        !bookedSessions.some(booked =>
-          booked.date.toISOString() ===
-          newSession.date.toISOString() && booked.startTime === newSession.startTime
-        )
-      )
+      ...newSessions
     ];
+
     await mentor.save();
+
     res.json({
       success: true,
-      msg: "Availability saved",
-      availability:
-        mentor.mentorProfile.availability,
-      upcomingSessions:
-        mentor.mentorProfile.upcomingSessions
+      msg: "Availability updated"
     });
-  }
-  catch (error) {
+
+  } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 
