@@ -7,9 +7,13 @@ export const getMentors = async (req, res) => {
     const limit = 20;
     const skip = (page - 1) * limit;
 
+    // Allow both explicitly complete profiles AND legacy mentors missing the field
     const filter = {
       role: "mentor",
-      isProfileComplete: true,
+      $or: [
+        { isProfileComplete: true },
+        { isProfileComplete: { $exists: false } }
+      ],
       "mentorProfile.verification.isVerified": { $ne: false }
     };
 
@@ -144,6 +148,10 @@ export const searchMentors = async (req, res) => {
 
     let filter = {
       role: "mentor",
+      $or: [
+        { isProfileComplete: true },
+        { isProfileComplete: { $exists: false } }
+      ],
       "mentorProfile.verification.isVerified": { $ne: false }
     };
 
