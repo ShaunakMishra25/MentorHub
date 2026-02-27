@@ -261,18 +261,19 @@ export default function SessionsPage() {
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12, fontWeight: 600 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} tickFormatter={(v: number) => `${v}h`} />
-                                    <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0/.1)", padding: "12px 16px", fontWeight: "bold", color: "#1e293b" }} formatter={(v: number) => [`${v} hours`, "Mentored"]} />
-                                    <Bar dataKey="hours" fill="url(#bg2)" radius={[6, 6, 6, 6]} barSize={36} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11, fontWeight: 600 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={(v: number) => `${v}h`} />
+                                    <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "16px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0/.1)", padding: "12px 16px", fontWeight: "bold", color: "#1e293b" }} formatter={(v: number | undefined) => [`${v ?? 0} hours`, "Mentored"]} />
+                                    <Bar dataKey="hours" fill="url(#bg2)" radius={[6, 6, 6, 6]} barSize={28} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </FadeIn>
                 </div>
 
-                {/* Right */}
+                {/* Right sidebar — Mobile: horizontal scroll or stacked, Desktop: fixed sidebar */}
                 <div className="lg:col-span-4 flex flex-col gap-5 md:gap-6">
+                    {/* Calendar — show first on mobile for quick date selection */}
                     <FadeIn delay={0.2} className="order-first lg:order-none">
                         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-card border border-slate-200 p-4 sm:p-6 hover:shadow-card-hover hover:-translate-y-1 transition-all">
                             <MiniCalendar selected={selected} onChange={setSelected} sessionDates={sessionDates} />
