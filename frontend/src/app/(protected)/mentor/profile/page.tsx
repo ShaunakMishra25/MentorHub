@@ -281,7 +281,7 @@ export default function EditProfile() {
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight leading-none">Your Profile</h1>
                         <span className="text-sm sm:text-[15px] font-medium text-slate-500 mt-1 sm:mt-1.5">Manage your public presence and settings</span>
                     </div>
-                    <Link href="/dashboard/preview" className="flex sm:hidden lg:flex items-center gap-2 text-xs sm:text-[13px] font-bold text-indigo-600 hover:text-indigo-700 bg-white hover:bg-indigo-50 active:bg-indigo-100 px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl transition-all border border-slate-200 shadow-sm hover:shadow-md w-fit mt-2 sm:mt-0 sm:ml-6">
+                    <Link href="/mentor/preview" className="flex sm:hidden lg:flex items-center gap-2 text-xs sm:text-[13px] font-bold text-indigo-600 hover:text-indigo-700 bg-white hover:bg-indigo-50 active:bg-indigo-100 px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl transition-all border border-slate-200 shadow-sm hover:shadow-md w-fit mt-2 sm:mt-0 sm:ml-6">
                         Preview Profile <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
                     </Link>
                 </div>
