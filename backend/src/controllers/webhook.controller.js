@@ -1,4 +1,4 @@
-import User from "../models/user.js";
+import User from "../models/User.js";
 import { Webhook } from "svix";
 
 export const handleClerkWebhook = async (req, res) => {
@@ -23,7 +23,7 @@ export const handleClerkWebhook = async (req, res) => {
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
-        
+
         if (user.role === "mentor") {
           return res.status(200).json({ message: "Already mentor" });
         }
