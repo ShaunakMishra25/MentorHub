@@ -44,7 +44,7 @@ function ReviewCard({
 }
 
 export default function ReviewPage() {
-  const { data } = useMentorOnboarding();
+  const { data, resetData } = useMentorOnboarding();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -57,12 +57,18 @@ export default function ReviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to submit");
+      
+      const result = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to submit");
+      }
+      
       setSubmitted(true);
+      resetData();
       setTimeout(() => router.push("/onboarding/profile/submitted"), 1500);
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Please try again.");
+    } catch (err: any) {
+      alert(err.message || "Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }

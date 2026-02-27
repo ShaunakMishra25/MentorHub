@@ -1,14 +1,49 @@
 import mongoose from "mongoose";
 
+const examDetailSchema = new mongoose.Schema({
+    examName: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    college: {
+        type: String,
+        trim: true,
+    },
+    rank: {
+        type: String,
+        trim: true,
+    },
+    percentile: {
+        type: String,
+        trim: true,
+    },
+    attempts: {
+        type: String,
+        trim: true,
+    },
+    interview: {
+        type: String,
+        trim: true,
+    },
+    selectionYear: {
+        type: String,
+        trim: true,
+    }
+}, { _id: true });
+
 const UserSchema = new mongoose.Schema({
     clerkId: {
         type: String,
         required: true,
         unique: true,
+        index: true,
     },
     email: {
         type: String,
         required: true,
+        unique: true,
+        index: true,
     },
     firstName: {
         type: String,
@@ -16,8 +51,16 @@ const UserSchema = new mongoose.Schema({
     lastName: {
         type: String,
     },
+    name: {
+        type: String,
+        trim: true,
+        index: true,
+    },
     username: {
         type: String,
+        unique: true,
+        sparse: true,
+        index: true,
     },
     imageUrl: {
         type: String,
@@ -26,10 +69,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ["student", "mentor", "admin"],
         default: "student",
+        index: true,
     },
-    name: {
+    languages: [{
         type: String,
-    },
+        trim: true,
+    }],
     mentorProfile: {
         basicInfo: {
             gender: String,
@@ -48,28 +93,69 @@ const UserSchema = new mongoose.Schema({
         expertise: {
             subjects: [String],
             specializations: String,
-            exams: [{
-                examName: String,
-                mainsAppeared: Number,
-                recentInterview: Boolean,
-                bankName: String,
-                postSelected: String,
-                college: String,
-                rank: Number,
-                percentile: Number,
-                selectionYear: Number,
+        },
+        availability: [{
+            day: {
+                type: String,
+                enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            },
+            slots: [{
+                startTime: String,
+                endTime: String,
+                sessionDuration: {
+                    type: Number,
+                    default: 15,
+                },
             }],
-        },
-        availability: {
-            days: [String],
-            timeSlots: [String],
-        },
+        }],
+        upcomingSessions: [{
+            date: Date,
+            startTime: String,
+            endTime: String,
+            sessionDuration: Number,
+            isBooked: {
+                type: Boolean,
+                default: false,
+            },
+            bookedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+        }],
         pricing: {
             pricePerSession: Number,
             sessionDuration: Number,
             isFreeTrialEnabled: Boolean,
-        }
-    }
+        },
+        examDetails: [examDetailSchema],
+        bio: String,
+        languages: [String],
+        rating: {
+            type: Number,
+            default: 0,
+        },
+        totalReviews: {
+            type: Number,
+            default: 0,
+        },
+        // Verification fields
+        verification: {
+            idType: String,
+            idNumber: String,
+            documentUrl: String,
+            isVerified: {
+                type: Boolean,
+                default: false,
+            },
+            verifiedAt: Date,
+        },
+    },
+    isProfileComplete: {
+        type: Boolean,
+        default: false,
+        index: true,
+    },
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);

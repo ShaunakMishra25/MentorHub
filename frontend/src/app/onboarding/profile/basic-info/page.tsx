@@ -31,7 +31,8 @@ export default function BasicInfoPage() {
   const router = useRouter();
   const { updateData } = useMentorOnboarding();
 
-  // Firebase OTP State
+  const PHONE_VERIFICATION_ENABLED = false;
+
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -74,7 +75,6 @@ export default function BasicInfoPage() {
     }
   }, [user, setValue]);
 
-  // Initialize Recaptcha
   useEffect(() => {
     if (typeof window !== 'undefined' && !window.recaptchaVerifier) {
       try {
@@ -85,8 +85,7 @@ export default function BasicInfoPage() {
             setOtpError("Recaptcha expired. Please try again.");
           }
         });
-      } catch (err) {
-        console.error("Recaptcha initialization failed", err);
+      } catch {
       }
     }
   }, []);
@@ -108,7 +107,6 @@ export default function BasicInfoPage() {
       setConfirmationResult(confirmation);
       setIsOtpSent(true);
     } catch (err: any) {
-      console.error("Error sending OTP:", err);
       setOtpError(err.message || "Failed to send OTP. Try again.");
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
@@ -127,10 +125,9 @@ export default function BasicInfoPage() {
     try {
       await confirmationResult.confirm(otp);
       setIsPhoneVerified(true);
-      setIsOtpSent(false); // Hide OTP input on success
+      setIsOtpSent(false);
       setOtpError(null);
-    } catch (err: any) {
-      console.error("Error verifying OTP:", err);
+    } catch {
       setOtpError("Invalid OTP. Please check and try again.");
     } finally {
       setIsVerifyingOtp(false);
@@ -138,7 +135,7 @@ export default function BasicInfoPage() {
   };
 
   const onSubmit = (data: BasicInfoFormValues) => {
-    if (!isPhoneVerified) {
+    if (PHONE_VERIFICATION_ENABLED && !isPhoneVerified) {
       setOtpError("Please verify your phone number before proceeding.");
       return;
     }
@@ -300,7 +297,7 @@ export default function BasicInfoPage() {
                         type="tel"
                         maxLength={10}
                         placeholder="98765 43210"
-                        disabled={isPhoneVerified || isOtpSent || isSubmitting}
+                        disabled={PHONE_VERIFICATION_ENABLED && (isPhoneVerified || isOtpSent || isSubmitting)}
                         className="h-full w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-900 transition-all duration-200 ease-in-out hover:bg-white focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                         {...register("phone", {
                           required: "Phone number is required",
@@ -318,6 +315,7 @@ export default function BasicInfoPage() {
                 </div>
 
                 {/* OTP Logic Section (Same line on desktop) */}
+                {PHONE_VERIFICATION_ENABLED && (
                 <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
                   <div id="recaptcha-container"></div>
 
@@ -360,9 +358,10 @@ export default function BasicInfoPage() {
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
-              {otpError && (
+              {PHONE_VERIFICATION_ENABLED && otpError && (
                 <p className="text-xs font-medium text-rose-500">{otpError}</p>
               )}
             </div>

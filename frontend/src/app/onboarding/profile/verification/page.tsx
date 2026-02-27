@@ -4,15 +4,39 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CloudUpload, ShieldCheck, CheckCircle, Info } from "lucide-react";
+import { useMentorOnboarding } from "@/shared/lib/context/MentorOnboardingContext";
+
+const ID_TYPES = [
+    { value: "", label: "Select ID Type" },
+    { value: "aadhaar", label: "Aadhaar Card" },
+    { value: "pan", label: "PAN Card" },
+    { value: "passport", label: "Passport" },
+    { value: "driving_license", label: "Driving License" },
+    { value: "voter_id", label: "Voter ID" },
+];
 
 export default function VerificationPage() {
     const router = useRouter();
+    const { updateData } = useMentorOnboarding();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | null>(null);
+    const [idType, setIdType] = useState("");
+    const [idNumber, setIdNumber] = useState("");
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selected = e.target.files?.[0];
         if (selected) setFile(selected);
+    };
+
+    const handleContinue = () => {
+        updateData({
+            verification: {
+                idType,
+                idNumber,
+                documentFileName: file?.name || null,
+            },
+        });
+        router.push("/onboarding/profile/review");
     };
 
     return (
@@ -65,14 +89,60 @@ export default function VerificationPage() {
             >
                 {/* Left: Upload + Accepted Docs */}
                 <div className="space-y-5 md:col-span-2">
+                    {/* Government ID Details */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+                        <h4 className="flex items-center gap-2 font-bold text-slate-900">
+                            <Info className="h-5 w-5 text-primary" />
+                            Government ID Details
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* ID Type Dropdown */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    ID Type <span className="text-rose-500">*</span>
+                                </label>
+                                <select
+                                    value={idType}
+                                    onChange={(e) => setIdType(e.target.value)}
+                                    className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-900 transition-all duration-200 ease-in-out hover:bg-white focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                >
+                                    {ID_TYPES.map((type) => (
+                                        <option key={type.value} value={type.value} disabled={type.value === ""}>
+                                            {type.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* ID Number Input */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    ID Number <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={idNumber}
+                                    onChange={(e) => setIdNumber(e.target.value)}
+                                    placeholder={idType === "aadhaar" ? "XXXX XXXX XXXX" : idType === "pan" ? "ABCDE1234F" : "Enter ID number"}
+                                    className="h-12 w-full rounded-lg border border-slate-200 bg-slate-50 px-4 text-slate-900 transition-all duration-200 ease-in-out hover:bg-white focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Upload Zone */}
-                    <label
-                        onDragOver={(e: React.DragEvent<HTMLLabelElement>) => { e.preventDefault(); setDragging(true); }}
-                        onDragLeave={() => setDragging(false)}
-                        onDrop={(e: React.DragEvent<HTMLLabelElement>) => { e.preventDefault(); setDragging(false); const dropped = e.dataTransfer.files[0]; if (dropped) setFile(dropped); }}
-                        className={`group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 bg-white transition-all ${dragging ? "border-primary bg-primary/5" : "border-slate-300 hover:border-primary"
-                            }`}
-                    >
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                            Upload Document <span className="text-rose-500">*</span>
+                        </label>
+                        <label
+                            onDragOver={(e: React.DragEvent<HTMLLabelElement>) => { e.preventDefault(); setDragging(true); }}
+                            onDragLeave={() => setDragging(false)}
+                            onDrop={(e: React.DragEvent<HTMLLabelElement>) => { e.preventDefault(); setDragging(false); const dropped = e.dataTransfer.files[0]; if (dropped) setFile(dropped); }}
+                            className={`group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 bg-white transition-all ${dragging ? "border-primary bg-primary/5" : "border-slate-300 hover:border-primary"
+                                }`}
+                        >
                         <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} />
                         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 transition-transform group-hover:scale-110">
                             <CloudUpload className="h-8 w-8 text-primary" />
@@ -100,7 +170,8 @@ export default function VerificationPage() {
                                 </span>
                             ))}
                         </div>
-                    </label>
+                        </label>
+                    </div>
 
                     {/* Accepted Documents */}
                     <div className="rounded-xl border border-slate-200 bg-white p-6">
@@ -138,11 +209,29 @@ export default function VerificationPage() {
                             Once verified, this badge will appear on your profile. Verified mentors see a{" "}
                             <span className="font-bold text-primary">45% higher</span> conversion rate from mentees.
                         </p>
-                        {/* Profile Preview placeholder */}
-                        <div className="flex h-32 w-full items-center justify-center rounded-lg bg-slate-200">
-                            <span className="text-xs font-medium uppercase tracking-widest text-slate-400">
-                                Profile Preview
-                            </span>
+                        {/* Profile Preview Card */}
+                        <div className="w-full rounded-xl bg-white border border-slate-200 p-4 shadow-sm">
+                            <div className="relative">
+                                {/* Profile Image */}
+                                <div className="relative w-16 h-16 mx-auto mb-3">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
+                                        alt="Mentor Preview"
+                                        className="w-full h-full rounded-full object-cover border-2 border-white shadow-md"
+                                    />
+                                    {/* Verified Badge */}
+                                    <div className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-md">
+                                        <CheckCircle className="h-4 w-4 text-white" />
+                                    </div>
+                                </div>
+                                {/* Mock Profile Info */}
+                                <h5 className="text-sm font-bold text-slate-900">Rajesh Sharma</h5>
+                                <p className="text-xs text-slate-500 mb-2">Senior Physics Faculty</p>
+                                <div className="flex items-center justify-center gap-1 text-xs text-primary font-medium">
+                                    <ShieldCheck className="h-3 w-3" />
+                                    <span>Verified Mentor</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -165,7 +254,7 @@ export default function VerificationPage() {
                 </button>
                 <button
                     type="button"
-                    onClick={() => router.push("/onboarding/profile/review")}
+                    onClick={handleContinue}
                     className="flex items-center gap-2 rounded-xl bg-primary px-10 py-3 font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-primary/90"
                 >
                     Continue to Final Step
