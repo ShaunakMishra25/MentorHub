@@ -19,8 +19,12 @@ export async function GET(request: NextRequest) {
     }
 
     const token = await getToken();
-    
-    const backendResponse = await fetch(`${BACKEND_URL}/api/mentor/upcoming`, {
+    const targetUrl = `${BACKEND_URL}/api/mentor/upcoming`;
+
+    console.log(`[Sessions API] Calling: ${targetUrl}`);
+    console.log(`[Sessions API] Token present: ${!!token}`);
+
+    const backendResponse = await fetch(targetUrl, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -29,12 +33,19 @@ export async function GET(request: NextRequest) {
     });
 
     const responseText = await backendResponse.text();
-    
+    console.log(`[Sessions API] Backend status: ${backendResponse.status}`);
+    console.log(`[Sessions API] Backend body: ${responseText.substring(0, 500)}`);
+
+    try {
+      // DEBUG: write payload to disk so I can read it
+      require('fs').writeFileSync('./nextjs-api-debug.txt', responseText);
+    } catch (e) { }
+
     let data;
     try {
       data = JSON.parse(responseText);
     } catch {
-      console.error("[Dashboard Sessions API] Failed to parse backend response");
+      console.error("[Dashboard Sessions API] Failed to parse backend response:", responseText.substring(0, 200));
       return NextResponse.json(
         { success: false, msg: "Invalid response from backend", sessions: [] },
         { status: 502 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button';
 import { Star, Search, ChevronDown, Check } from 'lucide-react';
 import { popularExams } from '../data';
 import { useRouter } from 'next/navigation';
+import { useUpcomingSessions, type DashboardSession } from '@/shared/lib/hooks/useDashboard';
 
 type Exam = (typeof popularExams)[number];
 
@@ -287,19 +288,48 @@ export default function HeroSection() {
     );
 }
 
+
 function HeroMockUI() {
-    const [isLoading, setIsLoading] = useState(true);
+    const { isSignedIn, user } = useUser();
+    const { sessions, isLoading } = useUpcomingSessions();
 
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 500); // max 600ms
-        return () => clearTimeout(timer);
-    }, []);
+    console.log("[UpcomingMeetingBanner] Total sessions:", sessions?.length);
+    console.log("[UpcomingMeetingBanner] Sessions data:", JSON.stringify(sessions?.slice(0, 2)));
 
+    // Soonest upcoming confirmed/pending session
+    const session = sessions.find(
+        (s: DashboardSession) => s.status === 'confirmed' || s.status === 'pending'
+    );
+
+    const isMentor = user?.publicMetadata?.role === 'mentor';
+    const otherPerson = isMentor ? session?.student : session?.mentor;
+    const otherName = otherPerson?.name || (isMentor ? 'Student' : 'your mentor');
+    const initials = otherName.charAt(0).toUpperCase();
+
+    // Format date
+    const getFormattedDate = () => {
+        if (!session) return '';
+        const [y, m, d] = session.date.split('-').map(Number);
+        const sessionDate = new Date(y, m - 1, d);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+        if (sessionDate.getTime() === today.getTime()) return 'Today';
+        if (sessionDate.getTime() === tomorrow.getTime()) return 'Tomorrow';
+        return sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    // Format time (HH:mm → h:mm AM/PM)
+    const fmtTime = (t: string) => {
+        const [h, m] = t.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ampm}`;
+    };
+
+    // Skeleton while loading
     if (isLoading) {
         return (
             <div className="p-4 pt-10 bg-gray-50 flex justify-center items-center min-h-[300px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-                    {/* Skeleton card 1 */}
                     <div className="bg-white p-5 rounded-xl shadow-soft border border-gray-100">
                         <div className="flex items-center gap-3 mb-5">
                             <div className="h-11 w-11 rounded-full bg-gray-100 animate-pulse" />
@@ -313,7 +343,6 @@ function HeroMockUI() {
                             <div className="h-3 w-4/5 bg-gray-100 rounded animate-pulse" />
                         </div>
                     </div>
-
                     <div className="hidden md:block bg-white p-5 rounded-xl shadow-soft border border-gray-100">
                         <div className="flex justify-between items-center mb-5">
                             <div className="h-3.5 w-20 bg-gray-100 rounded animate-pulse" />
@@ -341,37 +370,65 @@ function HeroMockUI() {
                 transition={{ duration: 0.2 }}
                 className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl"
             >
+                {/* === Upcoming Session Card === */}
                 <div className="bg-white p-6 rounded-xl shadow-soft border border-gray-100 hover:shadow-floating transition-shadow duration-200">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-sm font-semibold text-gray-900">Upcoming Session</h3>
-                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">
-                            Confirmed
-                        </span>
+                        {session ? (
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full capitalize">
+                                {session.status}
+                            </span>
+                        ) : (
+                            <span className="px-2.5 py-1 bg-gray-50 text-gray-400 text-xs font-medium rounded-full">
+                                None scheduled
+                            </span>
+                        )}
                     </div>
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-semibold text-base">
-                            R
+
+                    {session ? (
+                        <>
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 font-semibold text-base shrink-0">
+                                    {initials}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">{otherName}</p>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {isMentor ? 'Student' : 'Mentor'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mb-5">
+                                <div className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-center">
+                                    <p className="text-xs text-gray-400 mb-0.5">Date</p>
+                                    <p className="text-sm font-medium text-gray-800">{getFormattedDate()}</p>
+                                </div>
+                                <div className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-center">
+                                    <p className="text-xs text-gray-400 mb-0.5">Time</p>
+                                    <p className="text-sm font-medium text-gray-800">{fmtTime(session.startTime)}</p>
+                                </div>
+                            </div>
+                            <Button
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm transition-colors duration-200"
+                                onClick={() => window.location.href = `/session/${session.bookingId}`}
+                            >
+                                Join Meeting Room
+                            </Button>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+                                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <p className="text-sm text-gray-500 font-medium">No upcoming sessions</p>
+                            <p className="text-xs text-gray-400 mt-1">Book a session to get started</p>
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold text-gray-900">Rahul Sharma</p>
-                            <p className="text-xs text-gray-400 mt-0.5">IIT Bombay · JEE Advanced</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2 mb-5">
-                        <div className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-center">
-                            <p className="text-xs text-gray-400 mb-0.5">Date</p>
-                            <p className="text-sm font-medium text-gray-800">Tomorrow</p>
-                        </div>
-                        <div className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-center">
-                            <p className="text-xs text-gray-400 mb-0.5">Time</p>
-                            <p className="text-sm font-medium text-gray-800">5:00 PM</p>
-                        </div>
-                    </div>
-                    <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm transition-colors duration-200">
-                        Join Meeting Room
-                    </Button>
+                    )}
                 </div>
 
+                {/* === Performance Chart (static visual) === */}
                 <div className="hidden md:flex flex-col bg-white p-6 rounded-xl shadow-soft border border-gray-100 hover:shadow-floating transition-shadow duration-200">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-sm font-semibold text-gray-900">Performance</h3>
@@ -404,3 +461,4 @@ function HeroMockUI() {
         </div>
     );
 }
+

@@ -73,8 +73,17 @@ export const createBooking = async (req, res) => {
     const selectedSession =
       mentor.mentorProfile.upcomingSessions[sessionIndex];
 
+    // Look up the student making the booking
+    const authObj = typeof req.auth === "function" ? req.auth() : req.auth;
+    const studentClerkId = authObj?.userId;
+    const student = await User.findOne({ clerkId: studentClerkId });
+    if (!student) {
+      return res.status(404).json({ success: false, msg: "Student account not found" });
+    }
+
     const booking = await Booking.create({
       mentor: mentor._id,
+      student: student._id,
       sessionDate: selectedSession.date,
       startTime: selectedSession.startTime,
       endTime: selectedSession.endTime,
@@ -84,6 +93,7 @@ export const createBooking = async (req, res) => {
     });
 
     mentor.mentorProfile.upcomingSessions[sessionIndex].isBooked = true;
+    mentor.mentorProfile.upcomingSessions[sessionIndex].bookedBy = student._id;
     await mentor.save();
 
     return res.status(200).json({
@@ -97,5 +107,44 @@ export const createBooking = async (req, res) => {
       success: false,
       msg: "Server error"
     });
+  }
+};
+
+export const getBookingById = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId)
+      .populate("mentor", "name")
+      .populate("student", "name");
+
+    if (!booking) {
+      return res.status(404).json({ success: false, msg: "Booking not found" });
+    }
+
+    // Build scheduledAt from sessionDate + startTime (HH:mm)
+    const [hours, minutes] = booking.startTime.split(":").map(Number);
+    const scheduledAt = new Date(booking.sessionDate);
+    scheduledAt.setHours(hours, minutes, 0, 0);
+
+    return res.status(200).json({
+      success: true,
+      session: {
+        sessionId: booking._id,
+        mentorId: booking.mentor?._id,
+        studentId: booking.student?._id,
+        mentorName: booking.mentor?.name || "Mentor",
+        studentName: booking.student?.name || "Student",
+        price: booking.price,
+        duration: booking.sessionDuration,
+        paymentStatus: "Paid",
+        bookingStatus: booking.status,
+        scheduledAt: scheduledAt.toISOString(),
+        createdAt: booking.createdAt,
+      }
+    });
+  } catch (error) {
+    console.error("GetBooking Error:", error);
+    return res.status(500).json({ success: false, msg: "Server error" });
   }
 };

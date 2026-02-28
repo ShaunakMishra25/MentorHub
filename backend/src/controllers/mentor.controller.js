@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import Booking from "../models/Booking.js";
 import { generateAvailabilityMatrix } from "../utils/availabilityMatrix.js";
 
 export const getMentors = async (req, res) => {
@@ -47,42 +48,87 @@ export const getMentors = async (req, res) => {
 export const getMentorProfile = async (req, res) => {
   try {
     const { mentorId } = req.params;
-    const mentor = await User.findOne({
-      _id: mentorId,
-      role: "mentor"
-    })
-      .select("-clerkId")
-      .lean();
-    if (!mentor) {
-      return res.status(404).json({
-        success: false,
-        msg: "Mentor not found"
-      });
-    }
-    const availabilityMatrix =
-      generateAvailabilityMatrix(
-        mentor.mentorProfile.availability,
-        mentor.mentorProfile.upcomingSessions
-      );
 
-    mentor.availabilityMatrix =
-      availabilityMatrix;
-    res.json({
-      success: true,
-      mentor
-    });
+    // Fetch as mutable document so we can auto-extend if needed
+    const mentorDoc = await User.findOne({ _id: mentorId, role: "mentor" });
+    if (!mentorDoc) {
+      return res.status(404).json({ success: false, msg: "Mentor not found" });
+    }
+
+    // --- Auto-extend recurring sessions to always cover the next 30 days ---
+    const availability = mentorDoc.mentorProfile?.availability;
+    if (availability?.length) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const thirtyDaysOut = new Date(today); thirtyDaysOut.setDate(today.getDate() + 30);
+
+      // Check the latest future unbooked session date
+      const futureSessions = (mentorDoc.mentorProfile.upcomingSessions || [])
+        .filter(s => !s.isBooked && new Date(s.date) >= today);
+
+      const latestDate = futureSessions.length
+        ? new Date(Math.max(...futureSessions.map(s => new Date(s.date).getTime())))
+        : today;
+
+      // Regenerate if coverage is less than 20 days ahead
+      if (latestDate < new Date(today.getTime() + 20 * 86400000)) {
+        const newSessions = generateUpcomingSessionsFromAvailability(availability);
+        const bookedSessions = mentorDoc.mentorProfile.upcomingSessions.filter(s => s.isBooked);
+        const existingUnbooked = mentorDoc.mentorProfile.upcomingSessions.filter(s => !s.isBooked);
+        const existingKeys = new Set(existingUnbooked.map(s => {
+          const d = new Date(s.date);
+          return `${d.toISOString().split("T")[0]}_${s.startTime}`;
+        }));
+        const dedupedNew = newSessions.filter(s => {
+          const key = `${new Date(s.date).toISOString().split("T")[0]}_${s.startTime}`;
+          return !existingKeys.has(key);
+        });
+        if (dedupedNew.length > 0) {
+          mentorDoc.mentorProfile.upcomingSessions = [...bookedSessions, ...existingUnbooked, ...dedupedNew];
+          // Save asynchronously — don't block the response
+          mentorDoc.save().catch(e => console.error("Auto-extend save error:", e));
+        }
+      }
+    }
+
+    const mentor = mentorDoc.toObject();
+    mentor._id = mentorDoc._id;
+    delete mentor.clerkId;
+
+    const availabilityMatrix = generateAvailabilityMatrix(
+      mentor.mentorProfile.availability,
+      mentor.mentorProfile.upcomingSessions
+    );
+    mentor.availabilityMatrix = availabilityMatrix;
+
+    res.json({ success: true, mentor });
   }
   catch (error) {
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+
+export const getOwnProfile = async (req, res) => {
+  try {
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
+    const mentor = await User.findOne({ clerkId, role: "mentor" })
+      .select("-clerkId")
+      .lean();
+
+    if (!mentor) {
+      return res.status(404).json({ success: false, msg: "Mentor not found" });
+    }
+
+    res.json({ success: true, mentor });
+  } catch (error) {
+    console.error("getOwnProfile error:", error);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 
 export const updateMentorProfile = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
 
     const mentor = await User.findOne({
       clerkId,
@@ -210,25 +256,28 @@ export const searchMentors = async (req, res) => {
 
 export const upcomingSessions = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const role = req.user.role;
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
+    if (!clerkId) return res.status(401).json({ success: false, msg: "Unauthorized" });
+
+    const user = await User.findOne({ clerkId }).select("role _id");
+    if (!user) return res.status(404).json({ success: false, msg: "User not found" });
+
+    const userId = user._id;
+    const role = user.role;
     const now = new Date();
     let filter = {
       sessionDate: { $gte: now },
-      status: { $ne: "cancelled" }
+      status: { $ne: "cancelled" },
+      $or: [
+        { mentor: userId },
+        { student: userId }
+      ]
     };
-    if (role === "mentor") {
-      filter.mentor = userId;
-    }
-    else if (role === "student") {
-      filter.student = userId;
-    }
-    else {
-      return res.status(403).json({
-        success: false,
-        msg: "Invalid role"
-      });
-    }
+
+    console.log("[DEBUG] upcomingSessions request for clerkId:", clerkId);
+    console.log("[DEBUG] User role:", role, "userId:", userId);
+    console.log("[DEBUG] Executing filter:", JSON.stringify(filter));
+
     const sessions = await Booking.find(filter)
       .populate("mentor", "name imageUrl")
       .populate("student", "name imageUrl")
@@ -245,14 +294,14 @@ export const upcomingSessions = async (req, res) => {
       duration: s.sessionDuration,
       status: s.status,
       mentor: {
-        id: s.mentor._id,
-        name: s.mentor.name,
-        imageUrl: s.mentor.imageUrl
+        id: s.mentor?._id,
+        name: s.mentor?.name || "Unknown Mentor",
+        imageUrl: s.mentor?.imageUrl
       },
       student: {
-        id: s.student._id,
-        name: s.student.name,
-        imageUrl: s.student.imageUrl
+        id: s.student?._id,
+        name: s.student?.name || "Unknown Student",
+        imageUrl: s.student?.imageUrl
       },
       meetingLink: s.meetingLink || null
     }));
@@ -293,24 +342,21 @@ const parseTimeTo24Hour = (timeStr) => {
 
 const generateUpcomingSessionsFromAvailability = (availability) => {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const sessions = [];
 
-  for (let i = 0; i < 7; i++) {
-    const date = new Date();
+  // Generate for the next 30 days → each weekday appears ~4 times (recurring weekly)
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
     date.setDate(today.getDate() + i);
 
-    const dayName = date.toLocaleDateString("en-US", {
-      weekday: "long"
-    });
-
+    const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
     const dayAvailability = availability.find(d => d.day === dayName);
     if (!dayAvailability) continue;
 
     for (const slot of dayAvailability.slots) {
-
       const startStr = parseTimeTo24Hour(slot.startTime);
       const endStr = parseTimeTo24Hour(slot.endTime);
-
       if (!startStr || !endStr) continue;
 
       const [sh, sm] = startStr.split(":").map(Number);
@@ -318,7 +364,6 @@ const generateUpcomingSessionsFromAvailability = (availability) => {
 
       let start = new Date(date);
       let end = new Date(date);
-
       start.setHours(sh, sm, 0, 0);
       end.setHours(eh, em, 0, 0);
 
@@ -345,7 +390,7 @@ const generateUpcomingSessionsFromAvailability = (availability) => {
 
 export const saveAvailability = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
     const { availability } = req.body;
 
     if (!availability?.length) {
@@ -353,6 +398,25 @@ export const saveAvailability = async (req, res) => {
         success: false,
         msg: "Availability required"
       });
+    }
+
+    // Backend validation: No more than 3 slots per day, and durations must be 15, 20, or 30.
+    const validDurations = [15, 20, 30];
+    for (const dayA of availability) {
+      if (dayA.slots && dayA.slots.length > 3) {
+        return res.status(400).json({
+          success: false,
+          msg: `Maximum 3 time slots allowed per day (${dayA.day}).`
+        });
+      }
+      for (const slot of dayA.slots) {
+        if (!validDurations.includes(slot.sessionDuration)) {
+          return res.status(400).json({
+            success: false,
+            msg: `Invalid session duration: ${slot.sessionDuration} mins. Allowed: 15, 20, 30.`
+          });
+        }
+      }
     }
 
     const mentor = await User.findOne({
@@ -369,16 +433,32 @@ export const saveAvailability = async (req, res) => {
 
     mentor.mentorProfile.availability = availability;
 
-    const newSessions =
-      generateUpcomingSessionsFromAvailability(availability);
+    const newSessions = generateUpcomingSessionsFromAvailability(availability);
 
-    const bookedSessions =
-      mentor.mentorProfile.upcomingSessions.filter(s => s.isBooked);
+    // Keep already-booked sessions
+    const bookedSessions = mentor.mentorProfile.upcomingSessions.filter(s => s.isBooked);
+
+    // Build a set of keys for existing unbooked sessions so we don't duplicate
+    const existingUnbooked = mentor.mentorProfile.upcomingSessions.filter(s => !s.isBooked);
+    const existingKeys = new Set(
+      existingUnbooked.map(s => {
+        const d = new Date(s.date);
+        return `${d.toISOString().split("T")[0]}_${s.startTime}`;
+      })
+    );
+
+    // Only add sessions that don't already exist (avoids duplicates on re-save)
+    const dedupedNew = newSessions.filter(s => {
+      const key = `${new Date(s.date).toISOString().split("T")[0]}_${s.startTime}`;
+      return !existingKeys.has(key);
+    });
 
     mentor.mentorProfile.upcomingSessions = [
       ...bookedSessions,
-      ...newSessions
+      ...existingUnbooked,
+      ...dedupedNew
     ];
+
 
     await mentor.save();
 
@@ -396,35 +476,37 @@ export const saveAvailability = async (req, res) => {
 
 export const getSessionHistory = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const role = req.user.role;
-    const now = new Date();
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
+    if (!clerkId) return res.status(401).json({ success: false, msg: "Unauthorized" });
 
+    const user = await User.findOne({ clerkId }).select("role _id");
+    if (!user) return res.status(404).json({ success: false, msg: "User not found" });
+
+    const userId = user._id;
+    const role = user.role;
+    const now = new Date();
     let filter = {
-      $or: [
-        { sessionDate: { $lt: now } },
-        { status: "completed" },
-        { status: "cancelled" }
+      $and: [
+        {
+          $or: [
+            { mentor: userId },
+            { student: userId }
+          ]
+        },
+        {
+          $or: [
+            { sessionDate: { $lt: now } },
+            { status: "completed" },
+            { status: "cancelled" }
+          ]
+        }
       ]
     };
-    if (role === "mentor") {
-      filter.mentor = userId;
-    }
-    else if (role === "student") {
-      filter.student = userId;
-    }
-    else {
-      return res.status(403).json({
-        success: false,
-        msg: "Invalid role"
-      });
-    }
 
     const sessions = await Booking.find(filter)
       .populate("mentor", "name imageUrl")
       .populate("student", "name imageUrl")
       .sort({ sessionDate: -1, startTime: -1 })
-      .lean();
     const history = sessions.map(session => ({
 
       bookingId: session._id,
@@ -440,15 +522,15 @@ export const getSessionHistory = async (req, res) => {
       status: session.status,
       price: session.price,
       mentor: {
-        id: session.mentor._id,
-        name: session.mentor.name,
-        imageUrl: session.mentor.imageUrl
+        id: session.mentor?._id,
+        name: session.mentor?.name || "Unknown Mentor",
+        imageUrl: session.mentor?.imageUrl
       },
 
       student: {
-        id: session.student._id,
-        name: session.student.name,
-        imageUrl: session.student.imageUrl
+        id: session.student?._id,
+        name: session.student?.name || "Unknown Student",
+        imageUrl: session.student?.imageUrl
       },
 
       createdAt: session.createdAt

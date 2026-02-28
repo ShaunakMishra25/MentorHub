@@ -56,7 +56,7 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Flag to control OTP feature - set to false to disable OTP verification
   const ENABLE_OTP_VERIFICATION = false;
 
@@ -100,7 +100,7 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
   useEffect(() => {
     // Skip Recaptcha initialization when OTP verification is disabled
     if (!ENABLE_OTP_VERIFICATION) return;
-    
+
     if (step === 2 && typeof window !== 'undefined' && !window.recaptchaVerifier) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
@@ -118,49 +118,33 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
     }
   }, [step, ENABLE_OTP_VERIFICATION]);
 
-  // Calendar logic
+  // Calendar & real-session logic
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  const slots = [
-    "11:00 AM IST", "11:25 AM IST", "11:50 AM IST",
-    "12:15 PM IST", "12:40 PM IST", "01:05 PM IST",
-    "01:30 PM IST", "01:55 PM IST", "02:20 PM IST",
-  ];
+  // Derive availability from mentor's upcomingSessions
+  const sessions = mentor?.upcomingSessions || [];
 
-  /* -------- Calendar logic -------- */
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const calendarCells = Array.from({ length: firstDayOfMonth + daysInMonth });
+  // YYYY-MM-DD dates that have at least one unbooked session
+  const availableDates = new Set(
+    sessions
+      .filter(s => !s.isBooked)
+      .map(s => new Date(s.date).toISOString().split("T")[0])
+  );
 
-  const monthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "short" }).toUpperCase();
-  const fullMonthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" });
+  // All dates (booked or not) — used for calendar dot indicators
+  const datesWithSessions = new Set(
+    sessions.map(s => new Date(s.date).toISOString().split("T")[0])
+  );
 
-  const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+  // Sorted slots for the currently selected date
+  const slotsForSelectedDate = selectedDate
+    ? sessions
+      .filter(s => new Date(s.date).toISOString().split("T")[0] === selectedDate)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    : [];
 
-  const handlePrevMonth = () => {
-    if (isCurrentMonth) return;
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
-    setSelectedDate(null);
-    setSelectedSlot(null);
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
-    setSelectedDate(null);
-    setSelectedSlot(null);
-  };
 
   const canContinueStep1 = Boolean(selectedDate && selectedSlot);
 
@@ -394,98 +378,139 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
               </div>
 
               {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-base font-bold text-gray-800 tracking-wide">
-                  {fullMonthName} {currentYear}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={handlePrevMonth}
-                    disabled={isCurrentMonth}
-                    className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}`}
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleNextMonth}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+              {(() => {
+                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const calendarCells = Array.from({ length: firstDayOfMonth + daysInMonth });
+                const monthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "short" }).toUpperCase();
+                const fullMonthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" });
+                const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
 
-              {/* Month Abbr Title */}
-              <div className="mb-4 text-xs font-bold text-gray-500 tracking-wider">
-                {monthName}
-              </div>
+                const handlePrevMonth = () => {
+                  if (isCurrentMonth) return;
+                  if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+                  else setCurrentMonth(m => m - 1);
+                  setSelectedDate(null); setSelectedSlot(null);
+                };
+                const handleNextMonth = () => {
+                  if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+                  else setCurrentMonth(m => m + 1);
+                  setSelectedDate(null); setSelectedSlot(null);
+                };
 
-              {/* Calendar Grid */}
-              <div>
-                {/* Weekdays */}
-                <div className="grid grid-cols-7 mb-2">
-                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
-                    <div key={d} className="text-center text-xs text-gray-400 py-1">
-                      {d}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-y-2 gap-x-1">
-                  {calendarCells.map((_, index) => {
-                    const day = index - firstDayOfMonth + 1;
-                    if (day < 1 || day > daysInMonth) return <div key={index} />;
-
-                    const dateObj = new Date(currentYear, currentMonth, day);
-                    const isPast = dateObj < new Date(today.setHours(0, 0, 0, 0));
-                    const dateValue = dateObj.toISOString().split("T")[0];
-                    const isSelected = selectedDate === dateValue;
-
-                    return (
-                      <div key={index} className="flex justify-center">
-                        <motion.button
-                          disabled={isPast}
-                          onClick={() => {
-                            setSelectedDate(dateValue);
-                            setSelectedSlot(null);
-                          }}
-                          className={`w-9 h-9 flex items-center justify-center text-sm rounded-full transition-all duration-200
-                                                    ${isSelected
-                              ? "bg-blue-100 text-blue-600 font-bold"
-                              : isPast
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-50"
-                            }`}
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <span className="text-base font-bold text-gray-800 tracking-wide">
+                        {fullMonthName} {currentYear}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={handlePrevMonth}
+                          disabled={isCurrentMonth}
+                          className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}`}
                         >
-                          {day}
-                        </motion.button>
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={handleNextMonth}
+                          className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
+
+                    {/* Month Abbr */}
+                    <div className="mb-4 text-xs font-bold text-gray-500 tracking-wider">{monthName}</div>
+
+                    {/* Calendar Grid */}
+                    <div>
+                      <div className="grid grid-cols-7 mb-2">
+                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
+                          <div key={d} className="text-center text-xs text-gray-400 py-1">{d}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+                        {calendarCells.map((_: unknown, index: number) => {
+                          const day = index - firstDayOfMonth + 1;
+                          if (day < 1 || day > daysInMonth) return <div key={index} />;
+
+                          const dateObj = new Date(currentYear, currentMonth, day);
+                          const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+                          const isPast = dateObj < todayMidnight;
+                          const dateValue = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                          const isSelected = selectedDate === dateValue;
+                          const hasAvailable = availableDates.has(dateValue);
+                          const hasSessions = datesWithSessions.has(dateValue);
+                          const isDisabled = isPast || !hasAvailable;
+
+                          return (
+                            <div key={index} className="flex flex-col items-center">
+                              <motion.button
+                                disabled={isDisabled}
+                                onClick={() => { setSelectedDate(dateValue); setSelectedSlot(null); }}
+                                className={`w-9 h-9 flex items-center justify-center text-sm rounded-full transition-all duration-200
+                                  ${isSelected
+                                    ? "bg-blue-600 text-white font-bold shadow-md"
+                                    : isDisabled
+                                      ? isPast ? "text-gray-300 cursor-not-allowed" : "text-gray-400 cursor-not-allowed opacity-50"
+                                      : hasAvailable
+                                        ? "text-gray-800 hover:bg-blue-50 hover:text-blue-600 font-semibold"
+                                        : "text-gray-400"
+                                  }`}
+                              >
+                                {day}
+                              </motion.button>
+                              {/* Green dot = has available sessions; grey dot = all booked */}
+                              {hasSessions && !isPast && (
+                                <div className={`w-1 h-1 rounded-full mt-0.5 ${hasAvailable ? "bg-green-400" : "bg-gray-300"}`} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Time Slots */}
-              <div className="mt-8">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Now select time</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {slots.map((slot) => (
-                    <motion.button
-                      key={slot}
-                      disabled={!selectedDate}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`py-2.5 px-3 text-xs font-medium rounded-lg border transition-all duration-200
-                                            ${selectedSlot === slot
-                          ? "border-blue-600 bg-blue-50 text-blue-700"
-                          : !selectedDate
-                            ? "border-gray-100 text-gray-300 cursor-not-allowed"
-                            : "border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                        }`}
-                    >
-                      {slot}
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  {selectedDate
+                    ? slotsForSelectedDate.length > 0
+                      ? "Select a time slot"
+                      : "No slots available for this date"
+                    : "Select a date to see available slots"}
+                </h3>
+                {slotsForSelectedDate.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {slotsForSelectedDate.map(session => {
+                      const isBooked = session.isBooked;
+                      const isSelected = selectedSlot === session.startTime;
+                      return (
+                        <motion.button
+                          key={session._id || session.startTime}
+                          disabled={isBooked}
+                          onClick={() => !isBooked && setSelectedSlot(session.startTime)}
+                          className={`py-2.5 px-3 text-xs font-medium rounded-lg border transition-all duration-200 flex flex-col items-start
+                            ${isSelected
+                              ? "border-blue-600 bg-blue-50 text-blue-700"
+                              : isBooked
+                                ? "border-gray-100 text-gray-300 cursor-not-allowed opacity-40 line-through"
+                                : "border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50"
+                            }`}
+                        >
+                          <span>{session.startTime} – {session.endTime}</span>
+                          <span className={`text-[10px] mt-0.5 ${isBooked ? "text-red-300" : "text-gray-400"}`}>
+                            {isBooked ? "Booked" : `${session.sessionDuration} min`}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Continue Button */}

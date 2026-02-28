@@ -143,6 +143,9 @@ export const transformMentorData = (mentor: any): MentorProfile => {
       pricing,
     },
 
+    /** Pass through upcomingSessions for the booking page to use */
+    upcomingSessions: mentor.mentorProfile?.upcomingSessions || [],
+
   } as MentorProfile;
 };
 

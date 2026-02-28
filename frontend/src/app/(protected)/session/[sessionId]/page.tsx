@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { CheckCircle, Calendar, Clock, Video, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -22,6 +23,7 @@ interface Session {
 
 export default function SessionDetailsPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -36,7 +38,12 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ sessi
 
   const fetchSession = async (id: string) => {
     try {
-      const response = await fetch(`/api/sessions/${id}`);
+      const token = await getToken();
+      const response = await fetch(`/api/sessions/${id}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
       const data = await response.json();
 
       if (data.success) {

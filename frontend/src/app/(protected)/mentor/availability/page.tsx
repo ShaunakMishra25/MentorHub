@@ -3,16 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Calendar from 'react-calendar';
 import {
-    Clock,
-    Plus,
-    Trash2,
-    Save,
-    Check,
-    ChevronRight,
-    ChevronDown,
-    AlertCircle,
-    Repeat,
-    Ban
+    Clock, Plus, Trash2, Save, Check, ChevronDown, AlertCircle, Repeat, Calendar as CalendarIcon
 } from 'lucide-react';
 import FadeIn from '@/components/dashboard-ui/FadeIn';
 
@@ -26,7 +17,6 @@ interface TimeSlot {
 interface ParsedTime {
     hour: number;
     minute: string;
-    period: "AM" | "PM";
 }
 
 interface NotificationState {
@@ -35,35 +25,16 @@ interface NotificationState {
 }
 
 type DailyDurationsMap = Record<string, number>;
-type DateSlotsMap = Record<string, TimeSlot[]>;
 
 // --- Time Helper Functions ---
-
-// Convert "14:30" -> { hour: 2, minute: "30", period: "PM" }
 const parseTime = (time24: string): ParsedTime => {
-    if (!time24) return { hour: 9, minute: "00", period: "AM" };
+    if (!time24) return { hour: 9, minute: "00" };
     const [h, m] = time24.split(':');
-    let hourInt = parseInt(h, 10);
-    const period: "AM" | "PM" = hourInt >= 12 ? 'PM' : 'AM';
-
-    // Convert 0 -> 12, 13 -> 1, etc.
-    hourInt = hourInt % 12;
-    if (hourInt === 0) hourInt = 12;
-
-    return { hour: hourInt, minute: m, period };
+    return { hour: parseInt(h, 10), minute: m };
 };
 
-// Convert { hour: 2, minute: "30", period: "PM" } -> "14:30"
-const formatTime = (hour: number | string, minute: string, period: string): string => {
-    let hourInt = parseInt(String(hour), 10);
-
-    if (period === 'PM' && hourInt !== 12) {
-        hourInt += 12;
-    } else if (period === 'AM' && hourInt === 12) {
-        hourInt = 0;
-    }
-
-    const h = hourInt.toString().padStart(2, '0');
+const formatTime = (hour: number | string, minute: string): string => {
+    const h = parseInt(String(hour), 10).toString().padStart(2, '0');
     return `${h}:${minute}`;
 };
 
@@ -83,7 +54,7 @@ const checkConflict = (newSlot: { startTime: string; endTime: string }, existing
     });
 };
 
-// --- New Visual Clock Picker Component ---
+// --- Visual Clock Picker Component ---
 interface TimePickerProps {
     value: string;
     onChange: (value: string) => void;
@@ -94,10 +65,8 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className = ""
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Parse current value to control internal state
-    const { hour, minute, period } = parseTime(value);
+    const { hour, minute } = parseTime(value);
 
-    // Close on click outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -108,68 +77,62 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className = ""
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleUpdate = (newHour: number | string, newMinute: string, newPeriod: string) => {
-        const timeString = formatTime(newHour, newMinute, newPeriod);
+    const handleUpdate = (newHour: number | string, newMinute: string) => {
+        const timeString = formatTime(newHour, newMinute);
         onChange(timeString);
     };
 
+    const displayHour = hour.toString().padStart(2, '0');
+
     return (
         <div className="relative" ref={containerRef}>
-            {/* Trigger Button */}
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={`flex items-center gap-1 sm:gap-2 outline-none transition-all duration-200 hover:bg-slate-100 rounded-lg px-2 sm:px-3 py-2.5 sm:py-2 min-h-[44px] ${className}`}
             >
                 <span className="text-base sm:text-lg font-bold text-slate-700 tabular-nums">
-                    {hour}:{minute} <span className="text-xs sm:text-sm text-slate-500 ml-0.5">{period}</span>
+                    {displayHour}:{minute}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Visual Clock/Grid Popover */}
             {isOpen && (
-                <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto bottom-4 sm:bottom-auto sm:top-full sm:left-0 sm:mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-4 sm:w-[280px] animate-in fade-in zoom-in-95 duration-150">
-
-                    {/* Header Display */}
+                <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto bottom-4 sm:bottom-auto sm:top-full sm:left-0 sm:mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-4 sm:w-[240px] animate-in fade-in zoom-in-95 duration-150">
                     <div className="flex justify-center mb-4 pb-4 border-b border-slate-100">
                         <div className="flex items-baseline gap-1 text-3xl font-black text-slate-800 tracking-tight">
-                            {hour}:{minute}
-                            <span className="text-sm font-bold text-slate-400 ml-1">{period}</span>
+                            {displayHour}:{minute}
                         </div>
                     </div>
 
                     <div className="flex gap-4 h-48">
-                        {/* Hours Column */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
                             <div className="text-xs font-bold text-slate-400 uppercase mb-2 text-center">Hour</div>
                             <div className="grid grid-cols-3 sm:grid-cols-1 gap-1">
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((h) => (
+                                {Array.from({ length: 24 }, (_, i) => i).map((h) => (
                                     <button
                                         key={h}
-                                        onClick={() => handleUpdate(h, minute, period)}
+                                        onClick={() => handleUpdate(h, minute)}
                                         className={`py-2.5 sm:py-1.5 rounded-lg text-sm font-bold transition-colors min-h-[44px] sm:min-h-0 ${hour === h
                                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                                             : 'text-slate-600 hover:bg-slate-100'
                                             }`}
                                     >
-                                        {h}
+                                        {h.toString().padStart(2, '0')}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Divider */}
                         <div className="w-px bg-slate-100 h-full hidden sm:block"></div>
 
-                        {/* Minutes Column */}
                         <div className="flex-1">
                             <div className="text-xs font-bold text-slate-400 uppercase mb-2 text-center">Min</div>
                             <div className="grid grid-cols-2 sm:flex sm:flex-col gap-1">
                                 {['00', '15', '30', '45'].map((m) => (
                                     <button
                                         key={m}
-                                        onClick={() => handleUpdate(hour, m, period)}
+                                        onClick={() => handleUpdate(hour, m)}
                                         className={`py-2.5 sm:py-2 rounded-lg text-sm font-bold transition-colors min-h-[44px] sm:min-h-0 ${minute === m
                                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                                             : 'text-slate-600 hover:bg-slate-100'
@@ -179,25 +142,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className = ""
                                     </button>
                                 ))}
                             </div>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="w-px bg-slate-100 h-full hidden sm:block"></div>
-
-                        {/* AM/PM Column */}
-                        <div className="flex-1 flex sm:flex-col justify-center gap-2">
-                            {(['AM', 'PM'] as const).map((p) => (
-                                <button
-                                    key={p}
-                                    onClick={() => handleUpdate(hour, minute, p)}
-                                    className={`py-3 sm:py-3 px-4 sm:px-0 flex-1 sm:flex-initial rounded-xl text-xs font-bold transition-colors border min-h-[44px] sm:min-h-0 ${period === p
-                                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                                        : 'border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
                         </div>
                     </div>
                 </div>
@@ -235,35 +179,75 @@ const DurationSelector: React.FC<DurationSelectorProps> = ({ day, duration, onUp
 export default function Availability() {
     const [notification, setNotification] = useState<NotificationState | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isLoadingInit, setIsLoadingInit] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    // Initialize state
     const [weeklySlots, setWeeklySlots] = useState<TimeSlot[]>([]);
-    const [dateSpecificSlots, setDateSpecificSlots] = useState<DateSlotsMap>({});
-
     const initialDurations: DailyDurationsMap = daysOfWeek.reduce((acc: DailyDurationsMap, day) => {
-        acc[day] = 30;
+        acc[day] = 30; // default
         return acc;
     }, {});
     const [dailyDurations, setDailyDurations] = useState<DailyDurationsMap>(initialDurations);
 
-    // Helper to show notifications
     const showNotification = (message: string, type: "success" | "error" = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 3000);
     };
+
+    // Load existing availability
+    useEffect(() => {
+        const loadAvailability = async () => {
+            try {
+                const res = await fetch("/api/dashboard/profile");
+                const data = await res.json();
+
+                if (data.success && data.mentor?.mentorProfile?.availability) {
+                    const loadedSlots: TimeSlot[] = [];
+                    const loadedDurations: DailyDurationsMap = { ...initialDurations };
+
+                    data.mentor.mentorProfile.availability.forEach((dayObj: any) => {
+                        dayObj.slots.forEach((slot: any) => {
+                            loadedSlots.push({
+                                day: dayObj.day,
+                                startTime: slot.startTime,
+                                endTime: slot.endTime
+                            });
+                            // If a slot exists, use its duration as the daily duration to repopulate the UI state
+                            loadedDurations[dayObj.day] = slot.sessionDuration || 30;
+                        });
+                    });
+
+                    setWeeklySlots(loadedSlots);
+                    setDailyDurations(loadedDurations);
+                }
+            } catch (error) {
+                console.error("Failed to load availability:", error);
+                showNotification("Could not load existing availability settings", "error");
+            } finally {
+                setIsLoadingInit(false);
+            }
+        };
+
+        loadAvailability();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // --- Weekly Logic ---
     const addWeeklySlot = (day: string) => {
         const durationForDay = dailyDurations[day] || 30;
         const daySlots = weeklySlots.filter(s => s.day === day);
 
+        // Validation: Maximum 3 slots per day
+        if (daySlots.length >= 3) {
+            showNotification(`Maximum 3 time slots allowed per day (${day})`, 'error');
+            return;
+        }
+
         let startTime = '';
         let endTime = '';
         let found = false;
 
-        // Try to find a slot starting from 9:00 AM, checking every 30 mins
         for (let i = 0; i < 48; i++) {
             const currentStartMins = 9 * 60 + (i * 30);
             const currentEndMins = currentStartMins + durationForDay;
@@ -346,65 +330,21 @@ export default function Availability() {
             }
         });
 
-        setWeeklySlots(newWeeklySlots);
-        setDailyDurations(newDailyDurations);
-        showNotification(`Copied ${sourceDay}'s schedule to all days`);
-    };
-
-    // --- Date Specific Logic ---
-    const formatDateKey = (date: Date): string => {
-        return date.toLocaleDateString('en-CA'); // YYYY-MM-DD
-    };
-
-    const getSlotsForDate = (date: Date): TimeSlot[] => {
-        const key = formatDateKey(date);
-        return dateSpecificSlots[key] || [];
-    };
-
-    const removeDateSlot = (date: Date, index: number) => {
-        const key = formatDateKey(date);
-        const currentSlots = [...(dateSpecificSlots[key] || [])];
-        currentSlots.splice(index, 1);
-
-        const newSlots = { ...dateSpecificSlots };
-        if (currentSlots.length === 0) {
-            delete newSlots[key];
-        } else {
-            newSlots[key] = currentSlots;
-        }
-        setDateSpecificSlots(newSlots);
-    };
-
-    const updateDateSlot = (date: Date, index: number, field: keyof TimeSlot, value: string) => {
-        const key = formatDateKey(date);
-        const currentSlots = [...(dateSpecificSlots[key] || [])];
-        const slot = currentSlots[index];
-        const updatedSlot = { ...slot, [field]: value };
-
-        if (field === 'startTime' && value >= slot.endTime) {
-            showNotification('Start time must be before end time', 'error');
-            return;
-        }
-        if (field === 'endTime' && value <= slot.startTime) {
-            showNotification('End time must be after start time', 'error');
-            return;
-        }
-
-        const otherSlots = currentSlots.filter((_, i) => i !== index);
-        if (checkConflict(updatedSlot, otherSlots)) {
-            showNotification('Time slot overlaps with an existing session', 'error');
-            return;
-        }
-
-        currentSlots[index] = { ...currentSlots[index], [field]: value };
-
-        setDateSpecificSlots({
-            ...dateSpecificSlots,
-            [key]: currentSlots
+        // Enforce max 3 slots rule strictly even when copying
+        const safeWeeklySlots = newWeeklySlots.filter(s => {
+            let count = newWeeklySlots.filter(ns => ns.day === s.day && newWeeklySlots.indexOf(ns) <= newWeeklySlots.indexOf(s)).length;
+            return count <= 3;
         });
+
+        setWeeklySlots(safeWeeklySlots);
+        setDailyDurations(newDailyDurations);
+        if (sourceSlots.length > 3) {
+            showNotification(`Copied to all days! (Limited to 3 slots max per day)`, 'success');
+        } else {
+            showNotification(`Copied ${sourceDay}'s schedule to all days`, 'success');
+        }
     };
 
-    // --- Helper: Calculate Sessions Count ---
     const calculateSessions = (start: string, end: string, duration: number): number => {
         if (!start || !end) return 0;
         const [startH, startM] = start.split(':').map(Number);
@@ -418,20 +358,43 @@ export default function Availability() {
     };
 
     // --- Save Logic ---
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        // Simulate API call
-        setTimeout(() => {
-            // Here you would typically call an API to save the data
-            // For now, we just show a success notification
+        try {
+            // Group weeklySlots by day and format for the backend payload
+            const availabilityPayload = daysOfWeek.map(day => {
+                const daySlots = weeklySlots.filter(s => s.day === day).map(s => ({
+                    startTime: s.startTime,
+                    endTime: s.endTime,
+                    sessionDuration: dailyDurations[day] || 30
+                }));
+
+                return daySlots.length > 0 ? { day, slots: daySlots } : null;
+            }).filter(Boolean); // Remove empty days
+
+            const response = await fetch("/api/dashboard/availability", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ availability: availabilityPayload })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification('Availability settings saved successfully!');
+            } else {
+                showNotification(result.msg || 'Failed to save availability', 'error');
+            }
+        } catch (error) {
+            showNotification('A network error occurred', 'error');
+        } finally {
             setIsSaving(false);
-            showNotification('Availability settings saved successfully!');
-        }, 800);
+        }
     };
 
     return (
         <div className="min-h-screen bg-slate-50/80 font-sans text-slate-900 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
-            {/* Reuse Calendar Styles from Sessions page */}
+            {/* Reuse Calendar Styles */}
             <style>{`
         .custom-calendar.react-calendar { width: 100%; border: none; background: transparent; font-family: inherit; }
         .custom-calendar .react-calendar__navigation { display: flex; height: 48px; margin-bottom: 1rem; align-items: center; }
@@ -439,12 +402,13 @@ export default function Availability() {
         .custom-calendar .react-calendar__navigation button:enabled:hover { background-color: #f1f5f9; }
         .custom-calendar .react-calendar__month-view__weekdays { text-align: center; text-transform: uppercase; font-weight: 700; font-size: 0.75rem; color: #64748b; margin-bottom: 0.75rem; }
         .custom-calendar .react-calendar__month-view__weekdays__weekday abbr { text-decoration: none; }
-        .custom-calendar .react-calendar__tile { padding: 0.75rem 0.5rem; background: none; font-size: 0.875rem; font-weight: 500; color: #334155; border-radius: 9999px; height: 44px; display: flex; align-items: center; justify-content: center; }
-        .custom-calendar .react-calendar__tile:enabled:hover { background-color: #f1f5f9; color: #0f172a; }
-        .custom-calendar .react-calendar__tile--now { background-color: #e2e8f0; color: #0f172a; font-weight: 700; }
+        .custom-calendar .react-calendar__tile { padding: 0.75rem 0.5rem; background: none; font-size: 0.875rem; font-weight: 500; color: #334155; border-radius: 9999px; height: 44px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .custom-calendar .react-calendar__tile:enabled:hover { background-color: #e0e7ff; color: #4f46e5; }
+        .custom-calendar .react-calendar__tile--now { background-color: #f1f5f9; color: #0f172a; font-weight: 700; }
         .custom-calendar .react-calendar__tile--active { background-color: #4f46e5 !important; color: white !important; font-weight: 700; box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
         .has-slots { position: relative; }
         .has-slots::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #4f46e5; border-radius: 50%; }
+        .custom-calendar .react-calendar__tile:disabled { opacity: 0.25; cursor: not-allowed; }
         
         /* Custom Scrollbar for Time Picker */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
@@ -458,11 +422,11 @@ export default function Availability() {
                 <div className="px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 max-w-[1800px] mx-auto flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
                     <div>
                         <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Availability</h1>
-                        <p className="text-slate-500 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Manage your weekly schedule and specific date overrides</p>
+                        <p className="text-slate-500 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Manage your weekly schedule</p>
                     </div>
                     <button
                         onClick={handleSave}
-                        disabled={isSaving}
+                        disabled={isSaving || isLoadingInit}
                         className="hidden md:flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-slate-200 hover:shadow-indigo-200 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed min-h-[44px]"
                     >
                         {isSaving ? (
@@ -491,220 +455,164 @@ export default function Availability() {
                 </div>
             )}
 
-            <main className="max-w-[1800px] mx-auto px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 pb-24 md:pb-8">
+            <main className="max-w-[1400px] mx-auto px-4 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 pb-24 md:pb-8">
+                {isLoadingInit ? (
+                    <div className="flex flex-col items-center justify-center p-20 gap-4">
+                        <div className="w-8 h-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
+                        <span className="text-slate-500 font-bold tracking-tight">Loading schedule...</span>
+                    </div>
+                ) : (
+                    <FadeIn delay={0.1}>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-                    {/* Left: Weekly Schedule */}
-                    <FadeIn delay={0.1} className="lg:col-span-8">
-                        <div className="bg-white rounded-2xl sm:rounded-[24px] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8">
-                            <div className="mb-4 sm:mb-6 md:mb-8 pb-4 sm:pb-6 border-b border-slate-100">
-                                <div className="flex items-start sm:items-center gap-3">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
-                                        <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+                            {/* Left: Weekly Schedule */}
+                            <div className="lg:col-span-8 space-y-4">
+                                <div className="bg-white rounded-2xl sm:rounded-[24px] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8">
+                                    <div className="mb-4 sm:mb-6 md:mb-8 pb-4 sm:pb-6 border-b border-slate-100">
+                                        <div className="flex items-start sm:items-center gap-3">
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                                                <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-lg sm:text-xl font-bold text-slate-900">Weekly Recurring Schedule</h2>
+                                                <p className="text-slate-500 text-xs sm:text-sm font-medium">Set your standard availability. <span className="text-indigo-600 font-semibold">Select a date on the calendar</span> to edit that day of the week.</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">Weekly Recurring Schedule</h2>
-                                        <p className="text-slate-500 text-xs sm:text-sm font-medium">Set your standard availability for each day of the week.</p>
+
+                                    {/* (The existing weekly schedule map will go here naturally since it follows the block we just modified) */}
+
+                                    <div className="space-y-3 sm:space-y-4 md:space-y-6">
+                                        {daysOfWeek.map((day) => {
+                                            const daySlots = weeklySlots.filter(s => s.day === day);
+                                            const hasSlots = daySlots.length > 0;
+                                            const durationForDay = dailyDurations[day] || 30;
+                                            const isSelectedDay = selectedDate.toLocaleDateString('en-US', { weekday: 'long' }) === day;
+
+                                            const totalSessions = daySlots.reduce((acc, slot) => {
+                                                return acc + calculateSessions(slot.startTime, slot.endTime, durationForDay);
+                                            }, 0);
+
+                                            return (
+                                                <div key={day} id={`day-${day}`} className={`group flex flex-col md:flex-row md:items-start gap-3 sm:gap-4 md:gap-6 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border transition-all ${isSelectedDay ? 'border-indigo-400 bg-indigo-50/20 shadow-sm ring-1 ring-indigo-500/10' : ''} ${hasSlots && !isSelectedDay ? 'bg-white border-slate-200' : (!isSelectedDay ? 'bg-slate-50/50 border-slate-100' : '')}`}>
+                                                    <div className="w-full md:w-32 md:pt-2 flex flex-row md:flex-col justify-between md:justify-start items-center md:items-start gap-1">
+                                                        <div className="flex items-center gap-2 sm:gap-3">
+                                                            <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${hasSlots ? 'bg-green-500' : 'bg-slate-300'}`}></div>
+                                                            <span className={`text-base sm:text-lg font-bold ${hasSlots ? 'text-slate-900' : 'text-slate-400'}`}>{day}</span>
+                                                        </div>
+                                                        {hasSlots && (
+                                                            <span className="text-xs sm:text-sm font-medium text-slate-500 md:pl-5 animate-in fade-in">{totalSessions} session{totalSessions !== 1 ? 's' : ''}</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex-1 space-y-4">
+                                                        <DurationSelector
+                                                            day={day}
+                                                            duration={durationForDay}
+                                                            onUpdate={updateDailyDuration}
+                                                        />
+                                                        {hasSlots ? (
+                                                            <div className="space-y-3">
+                                                                {daySlots.map((slot, idx) => {
+                                                                    const realIndex = weeklySlots.indexOf(slot);
+                                                                    return (
+                                                                        <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-left-2">
+                                                                            <div className="flex items-center gap-1 sm:gap-2 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl p-1.5 sm:p-2 pl-2 sm:pl-4 shadow-sm hover:border-indigo-300 transition-colors focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/20 w-full sm:w-auto">
+                                                                                <TimePicker
+                                                                                    value={slot.startTime}
+                                                                                    onChange={(val) => updateWeeklySlot(realIndex, 'startTime', val)}
+                                                                                />
+                                                                                <span className="text-slate-300 font-light text-base sm:text-lg">|</span>
+                                                                                <TimePicker
+                                                                                    value={slot.endTime}
+                                                                                    onChange={(val) => updateWeeklySlot(realIndex, 'endTime', val)}
+                                                                                />
+                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => removeWeeklySlot(realIndex)}
+                                                                                className="p-2.5 sm:p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                                                            >
+                                                                                <Trash2 className="w-5 h-5" />
+                                                                            </button>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="pt-1 text-base text-slate-400 italic">Unavailable</div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="self-start md:self-center flex flex-row md:flex-col gap-1 sm:gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => addWeeklySlot(day)}
+                                                            className="p-2.5 sm:p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                                            title="Add time slot"
+                                                        >
+                                                            <Plus className="w-5 h-5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => copyToAllDays(day)}
+                                                            className="p-2.5 sm:p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                                                            title="Copy schedule to all days"
+                                                        >
+                                                            <Repeat className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-3 sm:space-y-4 md:space-y-6">
-                                {daysOfWeek.map((day) => {
-                                    const daySlots = weeklySlots.filter(s => s.day === day);
-                                    const hasSlots = daySlots.length > 0;
-                                    const durationForDay = dailyDurations[day] || 60;
-
-                                    const totalSessions = daySlots.reduce((acc, slot) => {
-                                        return acc + calculateSessions(slot.startTime, slot.endTime, durationForDay);
-                                    }, 0);
-
-                                    return (
-                                        <div key={day} className={`group flex flex-col md:flex-row md:items-start gap-3 sm:gap-4 md:gap-6 p-3 sm:p-4 md:p-5 rounded-xl sm:rounded-2xl border transition-all ${hasSlots ? 'bg-white border-slate-200' : 'bg-slate-50/50 border-slate-100'}`}>
-
-                                            {/* Day Label */}
-                                            <div className="w-full md:w-32 md:pt-2 flex flex-row md:flex-col justify-between md:justify-start items-center md:items-start gap-1">
-                                                <div className="flex items-center gap-2 sm:gap-3">
-                                                    <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${hasSlots ? 'bg-green-500' : 'bg-slate-300'}`}></div>
-                                                    <span className={`text-base sm:text-lg font-bold ${hasSlots ? 'text-slate-900' : 'text-slate-400'}`}>{day}</span>
-                                                </div>
-                                                {hasSlots && (
-                                                    <span className="text-xs sm:text-sm font-medium text-slate-500 md:pl-5 animate-in fade-in">{totalSessions} session{totalSessions !== 1 ? 's' : ''}</span>
-                                                )}
-                                            </div>
-
-                                            {/* Slots Area */}
-                                            <div className="flex-1 space-y-4">
-                                                <DurationSelector
-                                                    day={day}
-                                                    duration={durationForDay}
-                                                    onUpdate={updateDailyDuration}
-                                                />
-                                                {hasSlots ? (
-                                                    <div className="space-y-3">
-                                                        {daySlots.map((slot, idx) => {
-                                                            const realIndex = weeklySlots.indexOf(slot);
-                                                            return (
-                                                                <div key={idx} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-left-2">
-                                                                    <div className="flex items-center gap-1 sm:gap-2 bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl p-1.5 sm:p-2 pl-2 sm:pl-4 shadow-sm hover:border-indigo-300 transition-colors focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/20 w-full sm:w-auto">
-                                                                        <TimePicker
-                                                                            value={slot.startTime}
-                                                                            onChange={(val) => updateWeeklySlot(realIndex, 'startTime', val)}
-                                                                        />
-                                                                        <span className="text-slate-300 font-light text-base sm:text-lg">|</span>
-                                                                        <TimePicker
-                                                                            value={slot.endTime}
-                                                                            onChange={(val) => updateWeeklySlot(realIndex, 'endTime', val)}
-                                                                        />
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => removeWeeklySlot(realIndex)}
-                                                                        className="p-2.5 sm:p-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                                    >
-                                                                        <Trash2 className="w-5 h-5" />
-                                                                    </button>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                ) : (
-                                                    <div className="pt-1 text-base text-slate-400 italic">Unavailable</div>
-                                                )}
-                                            </div>
-
-                                            {/* Actions Area */}
-                                            <div className="self-start md:self-center flex flex-row md:flex-col gap-1 sm:gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() => addWeeklySlot(day)}
-                                                    className="p-2.5 sm:p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                    title="Add time slot"
-                                                >
-                                                    <Plus className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => copyToAllDays(day)}
-                                                    className="p-2.5 sm:p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                                    title="Copy schedule to all days"
-                                                >
-                                                    <Repeat className="w-5 h-5" />
-                                                </button>
-                                            </div>
+                            {/* Right: Calendar Sidebar */}
+                            <div className="lg:col-span-4">
+                                <div className="bg-white rounded-2xl sm:rounded-[24px] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8 sticky top-28">
+                                    <div className="mb-4 sm:mb-6">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <CalendarIcon className="w-5 h-5 text-indigo-500" />
+                                            <h2 className="text-lg sm:text-xl font-bold text-slate-900">Calendar</h2>
                                         </div>
-                                    );
-                                })}
+                                        <p className="text-slate-500 text-xs sm:text-sm font-medium">Click any date to highlight and edit its recurring weekly schedule.</p>
+                                    </div>
+
+                                    <div className="bg-slate-50/50 p-2 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-100">
+                                        <Calendar
+                                            minDate={new Date()}
+                                            onChange={(value) => {
+                                                if (value instanceof Date) {
+                                                    setSelectedDate(value);
+                                                    const dayName = value.toLocaleDateString('en-US', { weekday: 'long' });
+                                                    // Optional smooth scroll to the selected day row
+                                                    const element = document.getElementById(`day-${dayName}`);
+                                                    if (element) {
+                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                    }
+                                                }
+                                            }}
+                                            value={selectedDate}
+                                            className="custom-calendar"
+                                            tileClassName={({ date }) => {
+                                                // Check if this date's weekday has any slots configured 
+                                                const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+                                                const hasSlots = weeklySlots.some(s => s.day === dayName);
+                                                return hasSlots ? 'has-slots' : '';
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </FadeIn>
-
-                    {/* Right: Calendar & Specific Dates */}
-                    <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8 order-first lg:order-none">
-                        {/* Calendar Card */}
-                        <FadeIn delay={0.2}>
-                            <div className="bg-white rounded-2xl sm:rounded-[24px] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8">
-                                <div className="mb-4 sm:mb-6">
-                                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">Calendar</h2>
-                                    <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">Changes every year, but we always stay with you.</p>
-                                </div>
-
-                                <div className="bg-slate-50/50 p-2 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-100">
-                                    <Calendar
-                                        onChange={(value) => {
-                                            if (value instanceof Date) {
-                                                setSelectedDate(value);
-                                            }
-                                        }}
-                                        value={selectedDate}
-                                        className="custom-calendar"
-                                        tileClassName={({ date }) => {
-                                            const key = formatDateKey(date);
-                                            return dateSpecificSlots[key] ? 'has-slots' : '';
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </FadeIn>
-
-                        {/* Selected Date Slots Card */}
-                        <FadeIn delay={0.3}>
-                            <div className="bg-white rounded-2xl sm:rounded-[24px] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-8">
-                                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                                    <div>
-                                        <h2 className="text-base sm:text-lg font-bold text-slate-900 flex flex-wrap items-center gap-1 sm:gap-2">
-                                            {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            <span className="text-slate-400 font-normal">
-                                                {selectedDate.toLocaleDateString('en-US', { year: 'numeric' })}
-                                            </span>
-                                        </h2>
-                                        <p className="text-slate-500 text-xs font-medium mt-0.5">
-                                            {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 sm:space-y-3">
-                                    {dateSpecificSlots[formatDateKey(selectedDate)]?.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-red-100 rounded-2xl bg-red-50/30">
-                                            <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-2 text-red-500">
-                                                <Ban className="w-5 h-5" />
-                                            </div>
-                                            <h3 className="text-sm font-bold text-slate-900">Unavailable</h3>
-                                            <button
-                                                onClick={() => {
-                                                    const newSlots = { ...dateSpecificSlots };
-                                                    delete newSlots[formatDateKey(selectedDate)];
-                                                    setDateSpecificSlots(newSlots);
-                                                }}
-                                                className="mt-2 text-slate-600 font-bold text-xs hover:text-slate-900 underline"
-                                            >
-                                                Clear override
-                                            </button>
-                                        </div>
-                                    ) : getSlotsForDate(selectedDate).length > 0 ? (
-                                        getSlotsForDate(selectedDate).map((slot, idx) => (
-                                            <div key={idx} className="group flex flex-wrap sm:flex-nowrap items-center justify-between p-2 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-sm transition-all bg-white gap-2">
-                                                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                                                    <div className="flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial">
-                                                        <TimePicker
-                                                            value={slot.startTime}
-                                                            onChange={(val) => updateDateSlot(selectedDate, idx, 'startTime', val)}
-                                                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 sm:px-3 py-1.5 text-sm sm:text-base text-slate-900 focus:border-indigo-500 min-w-[80px] sm:min-w-[90px]"
-                                                        />
-                                                        <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
-                                                        <TimePicker
-                                                            value={slot.endTime}
-                                                            onChange={(val) => updateDateSlot(selectedDate, idx, 'endTime', val)}
-                                                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 sm:px-3 py-1.5 text-sm sm:text-base text-slate-900 focus:border-indigo-500 min-w-[80px] sm:min-w-[90px]"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => removeDateSlot(selectedDate, idx)}
-                                                    className="p-2.5 sm:p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
-                                            <p className="text-slate-400 text-xs max-w-[200px]">
-                                                Using weekly schedule for <span className="font-bold">{selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}</span>.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </FadeIn>
-                    </div>
-                </div>
+                )}
             </main>
 
             {/* Mobile Floating Action Bar */}
             <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-white border-t border-slate-200 md:hidden z-30">
                 <button
                     onClick={handleSave}
-                    disabled={isSaving}
+                    disabled={isSaving || isLoadingInit}
                     className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 hover:bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-slate-200 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed min-h-[52px]"
                 >
                     {isSaving ? (

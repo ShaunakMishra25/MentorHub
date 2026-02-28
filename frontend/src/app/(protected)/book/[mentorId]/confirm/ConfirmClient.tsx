@@ -45,7 +45,7 @@ export default function ConfirmClient({ mentor, sessionDate, sessionTime, price 
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Call backend booking API to persist to database
-      const response = await fetch(`/api/booking`, {
+      const response = await fetch(`/api/booking/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,8 +72,9 @@ export default function ConfirmClient({ mentor, sessionDate, sessionTime, price 
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to session/booking details page
-        router.push(`/session/${data.booking?._id || 'success'}`);
+        // Redirect to success/celebration page
+        router.push(`/book/success`);
+
       } else {
         setError(data.msg || data.error || "Booking failed. Please try again.");
         setProcessing(false);

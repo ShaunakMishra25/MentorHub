@@ -43,6 +43,15 @@ app.post("/debug", (req, res) => {
 app.get("/health", (req, res) => {
   res.send("Backend healthy 🚀");
 });
+
+// Global JSON error handler — catches Express errors (including Clerk auth errors)
+// so that all errors return JSON instead of HTML error pages
+app.use((err, req, res, next) => {
+  console.error("[Express Error]", err.message || err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ success: false, msg: err.message || "Internal server error" });
+});
+
 console.log("APP LOADED");
 
 export default app;

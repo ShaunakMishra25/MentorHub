@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
     TrendingUp,
@@ -32,7 +32,8 @@ import {
 } from "recharts";
 import { useUser } from "@clerk/nextjs";
 import FadeIn from "@/components/dashboard-ui/FadeIn";
-import { useUpcomingSessions, useDashboardStats, useSessionHistory } from "@/shared/lib/hooks/useDashboard";
+import { useUpcomingSessions, useDashboardStats, useSessionHistory, useMentorProfile } from "@/shared/lib/hooks/useDashboard";
+import UpcomingMeetingBanner from "@/shared/ui/UpcomingMeetingBanner";
 
 // ── Tooltip (verbatim from Dashboard.jsx) ─────────────────────────────────────
 
@@ -59,11 +60,13 @@ export default function Dashboard() {
     const navigate = useRouter();
     const [notification, setNotification] = useState<{ id: string; message: string } | null>(null);
     const [chartVisible, setChartVisible] = useState(false);
+    const chartVisibleRef = useRef<HTMLDivElement>(null);
 
     // Fetch real data from backend
     const { sessions: upcomingSessionsData, isLoading: sessionsLoading } = useUpcomingSessions();
-    const { sessions: historyData } = useSessionHistory();
+    const { sessions: historyData, isLoading: historyLoading } = useSessionHistory();
     const { completedSessions, totalEarnings, activeStudents, isLoading: statsLoading } = useDashboardStats();
+    const { profile, isLoading: profileLoading } = useMentorProfile();
 
     // Calculate earnings data for chart from history
     const earningData = useMemo(() => {
@@ -82,7 +85,7 @@ export default function Dashboard() {
         // Group earnings by month
         const monthlyEarnings: Record<string, number> = {};
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
+
         historyData.forEach((session) => {
             if (session.status === "completed" && session.price) {
                 const date = new Date(session.date);
@@ -142,8 +145,8 @@ export default function Dashboard() {
         walletBalance,
         activeStudents,
         sessionsCompleted: completedSessions,
-        rating: "4.9",
-        responseTime: "2h",
+        rating: (profile as any)?.mentorProfile?.rating || "0.0",
+        responseTime: "N/A",
     };
 
     const showNotification = (id: string, message: string) => {
@@ -162,6 +165,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-slate-50/50 pb-20 md:pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">
+            <UpcomingMeetingBanner />
             {/* Header — Mobile-first: stacked layout, scales to row on sm+ */}
             <header className="bg-white/70 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-10 -mx-4 md:-mx-6 lg:-mx-8">
                 <div className="px-4 pt-5 pb-5 md:px-6 md:pt-6 md:pb-6 lg:px-8 lg:pt-8 max-w-[1800px] mx-auto flex flex-col gap-3 sm:flex-row sm:gap-0 sm:justify-between sm:items-center">

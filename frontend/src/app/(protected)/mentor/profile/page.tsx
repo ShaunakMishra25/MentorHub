@@ -8,7 +8,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -20,6 +20,8 @@ import {
 import { useUser } from "@clerk/nextjs";
 import FadeIn from "@/components/dashboard-ui/FadeIn";
 import QRCode from "react-qr-code";
+import UpcomingMeetingBanner from "@/shared/ui/UpcomingMeetingBanner";
+import { useUpcomingSessions } from "@/shared/lib/hooks/useDashboard";
 
 // ── Sub-Components (verbatim from EditProfile.jsx) ────────────────────────────
 
@@ -112,13 +114,7 @@ interface MentorState {
     examDetails: Array<any>;
 }
 
-// ── Mock upcoming sessions (verbatim from EditProfile.jsx) ────────────────────
-
-const upcomingSessions = [
-    { id: 1, student: "Sarah Jenkins", time: "Today, 2:00 PM", topic: "React Performance Tuning", duration: "60 min", status: "Confirmed", avatar: "https://ui-avatars.com/api/?name=Sarah+Jenkins&background=e0e7ff&color=4f46e5" },
-    { id: 2, student: "Marcus Cole", time: "Tomorrow, 10:00 AM", topic: "System Design Interview", duration: "45 min", status: "Pending", avatar: "https://ui-avatars.com/api/?name=Marcus+Cole&background=fef3c7&color=d97706" },
-    { id: 3, student: "Elena Rodriguez", time: "Thu, 4:30 PM", topic: "Resume Review", duration: "30 min", status: "Confirmed", avatar: "https://ui-avatars.com/api/?name=Elena+Rodriguez&background=dcfce7&color=16a34a" },
-];
+// ── Mock upcoming sessions removed. ──────────────────────────────────────────
 
 // ── Helper functions (verbatim from EditProfile.jsx) ─────────────────────────
 
@@ -162,6 +158,36 @@ export default function EditProfile() {
     });
     const [profileImageUrl, setProfileImageUrl] = useState<string>(user?.imageUrl ?? AVATAR_ASSETS.Male);
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+    const { sessions: rawUpcomingSessions } = useUpcomingSessions();
+
+    const upcomingSessions = useMemo(() => {
+        return rawUpcomingSessions.slice(0, 3).map((session, index) => {
+            const sessionDate = new Date(session.date);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            let timeLabel = "";
+            if (sessionDate.toDateString() === today.toDateString()) {
+                timeLabel = `Today, ${session.startTime}`;
+            } else if (sessionDate.toDateString() === tomorrow.toDateString()) {
+                timeLabel = `Tomorrow, ${session.startTime}`;
+            } else {
+                timeLabel = `${sessionDate.toLocaleDateString("en-US", { weekday: "short" })}, ${session.startTime}`;
+            }
+
+            return {
+                id: session.bookingId || index + 1,
+                student: session.student.name,
+                time: timeLabel,
+                topic: `${session.duration} min session`,
+                duration: `${session.duration} min`,
+                status: session.status === "confirmed" ? "Confirmed" : "Pending",
+                avatar: session.student.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.student.name)}&background=e0e7ff&color=4f46e5`,
+            };
+        });
+    }, [rawUpcomingSessions]);
 
     const [activeSection, setActiveSection] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
@@ -326,6 +352,7 @@ export default function EditProfile() {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 pb-24 overflow-x-hidden selection:bg-indigo-100 selection:text-indigo-900">
+            <UpcomingMeetingBanner />
             <style>{`
         @keyframes popIn { 0% { opacity: 0; transform: scale(0.96) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
         .animate-pop-in { animation: popIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -554,16 +581,21 @@ export default function EditProfile() {
                             </div>
                             <SmoothWrapper>
                                 <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                                    {mentor.availability.map((slot) => (
-                                        <div key={slot.id} className="group relative flex items-center justify-between p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
-                                            <div className="flex items-center gap-3 sm:gap-4">
-                                                <div className="w-1 sm:w-1.5 h-10 sm:h-12 rounded-full bg-indigo-200 group-hover:bg-indigo-500 transition-colors" />
-                                                <div>
-                                                    <p className="font-bold text-slate-900 text-sm sm:text-[15px]">{slot.day}</p>
-                                                    <p className="text-[11px] sm:text-xs font-bold text-slate-500 flex items-center gap-1.5 mt-1 bg-white px-2 py-1 rounded-lg border border-slate-100 w-fit">
-                                                        <Clock className="w-3 h-3" />{slot.startTime} - {slot.endTime}
+                                    {mentor.availability.map((dayObj: any) => (
+                                        <div key={dayObj._id || dayObj.day} className="group relative flex flex-col items-start justify-start p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-100 bg-slate-50/30 hover:bg-white hover:border-indigo-100 hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+                                            <div className="flex items-center gap-3 sm:gap-4 mb-3 w-full">
+                                                <div className="w-1 sm:w-1.5 h-6 rounded-full bg-indigo-200 group-hover:bg-indigo-500 transition-colors" />
+                                                <p className="font-bold text-slate-900 text-sm sm:text-[15px]">{dayObj.day}</p>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 pl-4 sm:pl-5 w-full">
+                                                {dayObj.slots && dayObj.slots.map((slot: any, idx: number) => (
+                                                    <p key={idx} className="text-[11px] sm:text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-100 w-fit">
+                                                        <Clock className="w-3 h-3 text-indigo-400" />
+                                                        {slot.startTime} - {slot.endTime}
+                                                        <span className="text-slate-300 mx-1">|</span>
+                                                        <span className="text-indigo-500">{slot.sessionDuration}m</span>
                                                     </p>
-                                                </div>
+                                                ))}
                                             </div>
                                         </div>
                                     ))}
@@ -660,7 +692,7 @@ export default function EditProfile() {
                             </Link>
                         </div>
                         <div className="space-y-4 sm:space-y-5">
-                            {upcomingSessions.map((session, index) => (
+                            {upcomingSessions.map((session: any, index: number) => (
                                 <div key={session.id}
                                     className="flex flex-col gap-4 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-slate-50/50 border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-1 hover:border-indigo-100 transition-all duration-300 group cursor-pointer animate-in fade-in slide-in-from-bottom-4"
                                     style={{ animationDelay: `${index * 100}ms` }}>

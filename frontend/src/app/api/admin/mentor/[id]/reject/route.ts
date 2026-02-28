@@ -3,13 +3,13 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        // @ts-ignore
         const { getToken } = await auth();
         const token = await getToken();
-        const { id } = await params;
+        // Await the params promise in Next.js 15
+        const { id } = await context.params;
         const mentorId = id;
 
         const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8080";

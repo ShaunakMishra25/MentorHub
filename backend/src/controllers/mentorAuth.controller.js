@@ -3,7 +3,7 @@ import { clerkClient } from "@clerk/clerk-sdk-node";
 
 export const becomeMentor = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
 
     const {
       basicInfo,

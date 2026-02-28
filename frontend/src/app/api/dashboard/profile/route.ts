@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
 
     const token = await getToken();
 
-    // Fetch the full profile directly from our new getOwnProfile backend endpoint
-    const profileResponse = await fetch(`${BACKEND_URL}/api/mentor/mentor/profile`, {
+    // Fetch the full profile directly from the backend endpoint
+    const profileResponse = await fetch(`${BACKEND_URL}/api/mentor/profile`, {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest) {
     const token = await getToken();
     const body = await request.json();
 
-    const backendResponse = await fetch(`${BACKEND_URL}/api/mentor/mentor/profile`, {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/mentor/profile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

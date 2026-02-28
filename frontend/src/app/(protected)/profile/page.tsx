@@ -14,6 +14,7 @@ import {
     BookOpen,
     Loader2,
 } from "lucide-react";
+import UpcomingMeetingBanner from "@/shared/ui/UpcomingMeetingBanner";
 
 export default function ProfilePage() {
     const { user, isLoaded } = useUser();
@@ -45,8 +46,9 @@ export default function ProfilePage() {
     const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "User";
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 pb-8">
+            <UpcomingMeetingBanner />
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
