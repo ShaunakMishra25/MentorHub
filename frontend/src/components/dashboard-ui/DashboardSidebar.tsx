@@ -49,6 +49,11 @@ export default function DashboardSidebar({
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+    // Smooth transition handling for sidebar expansion
+    const toggleSidebar = () => {
+        setIsCollapsed(prev => !prev);
+    };
+
     const isActive = (item: NavItem) =>
         item.exact
             ? pathname === item.to
@@ -136,13 +141,13 @@ export default function DashboardSidebar({
                             transition-all hover:shadow-md active:scale-[0.98] cursor-pointer
                             ${isCollapsed ? "md:justify-center md:border-transparent md:shadow-none md:hover:bg-slate-100" : ""}`}
                     >
-                        <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-full bg-blue-50 overflow-hidden shrink-0 relative">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 overflow-hidden shrink-0 relative transition-none">
                             <Image
                                 src={profileImageUrl ?? "https://api.dicebear.com/9.x/toon-head/svg?seed=Vivian"}
                                 alt={name}
                                 width={40}
                                 height={40}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-none"
                                 unoptimized
                             />
                         </div>
