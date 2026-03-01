@@ -148,6 +148,7 @@ export default function AuthFormsCard({ initialView }: AuthFormsCardProps) {
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") ?? "/";
 
+    // Redirect on successful auth
     useEffect(() => {
         if (isSignedIn && isUserLoaded && user && !isRedirecting) {
             setIsRedirecting(true);
