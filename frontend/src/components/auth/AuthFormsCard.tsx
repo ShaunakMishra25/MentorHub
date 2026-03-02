@@ -152,12 +152,7 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
     useEffect(() => {
         if (isSignedIn && isUserLoaded && user && !isRedirecting) {
             setIsRedirecting(true);
-            const role = user.publicMetadata?.role as string | undefined;
-            if (role === "mentor" && redirectUrl === "/") {
-                router.push("/mentor/profile");
-            } else {
-                router.push(redirectUrl);
-            }
+            router.push(redirectUrl);
         }
     }, [isSignedIn, isUserLoaded, user, redirectUrl, isRedirecting, router]);
 
@@ -305,7 +300,7 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
         signIn.authenticateWithRedirect({
             strategy: "oauth_google",
             redirectUrl: "/sso-callback",
-            redirectUrlComplete: redirectUrl !== "/" ? redirectUrl : "/profile",
+            redirectUrlComplete: redirectUrl,
         });
     };
 
@@ -380,7 +375,7 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
             const result = await signUp.attemptEmailAddressVerification({ code });
             if (result.status === "complete") {
                 await setSignUpActive({ session: result.createdSessionId });
-                router.push(view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/profile");
+                router.push(view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/");
             } else {
                 setVerifyError("Verification incomplete. Please try again.");
             }
@@ -394,7 +389,7 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
 
     const handleSignUpGoogle = () => {
         if (!isSignUpLoaded || isSignUpLoading) return;
-        const redirectTarget = view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/profile";
+        const redirectTarget = view === "sign-up-mentor" ? "/onboarding/profile/basic-info" : "/";
         signUp.authenticateWithRedirect({
             strategy: "oauth_google",
             redirectUrl: "/sso-callback",
@@ -729,7 +724,7 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
                                             </AnimatePresence>
 
                                             {/* Name Fields */}
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 <div>
                                                     <div className="relative flex items-center">
                                                         <User className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -823,6 +818,9 @@ function AuthFormsCardInner({ initialView }: AuthFormsCardProps) {
                                                     )}
                                                 </AnimatePresence>
                                             </div>
+
+                                            {/* Clerk bot-protection anchor */}
+                                            <div id="clerk-captcha" />
 
                                             {/* Submit Button */}
                                             <motion.button

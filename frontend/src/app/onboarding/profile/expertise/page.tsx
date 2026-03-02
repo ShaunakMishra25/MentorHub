@@ -511,7 +511,7 @@ export default function ExpertisePage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 sm:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:text-slate-900 sm:w-auto"
             >
               <ArrowLeft className="h-4 w-4" />
               Back

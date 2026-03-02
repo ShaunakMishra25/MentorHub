@@ -17,7 +17,6 @@ function ExamCombobox() {
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Close on click outside
     useEffect(() => {
         function handleClick(e: MouseEvent) {
             if (!containerRef.current?.contains(e.target as Node)) {
@@ -30,7 +29,6 @@ function ExamCombobox() {
 
     const handleSelect = (exam: Exam) => {
         setOpen(false);
-        // Navigate with URI encoded param (which correctly turns CA/CMA/CS into encoded string)
         router.push(`/mentors?exam=${encodeURIComponent(exam.name)}`);
     };
 
@@ -90,13 +88,13 @@ function ExamCombobox() {
                                         onClick={() => handleSelect(exam)}
                                         className="
                                             group flex items-center gap-3 p-3 rounded-xl cursor-pointer text-left
-                                            transition-all duration-200 border border-transparent
+                                            transition-transform duration-200 border border-transparent
                                             hover:bg-gray-50 hover:border-gray-100 hover:shadow-sm
                                         "
                                     >
                                         <div className={`
                                             w-10 h-10 rounded-lg flex items-center justify-center shrink-0
-                                            ${exam.bg} ${exam.color} transition-transform duration-300 group-hover:scale-110
+                                            ${exam.bg} ${exam.color} transition-transform duration-200 group-hover:scale-105
                                         `}>
                                             <Icon className="w-5 h-5" />
                                         </div>
@@ -121,7 +119,7 @@ export default function HeroSection() {
     const { isSignedIn, isLoaded } = useUser();
 
     return (
-        <section className="relative pt-36 pb-28 md:pt-48 md:pb-40 bg-white z-10">
+        <section id="hero" className="relative pt-36 pb-28 md:pt-48 md:pb-40 bg-white z-10">
 
             <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white to-gray-50/60" />
 
@@ -143,7 +141,7 @@ export default function HeroSection() {
                             className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-600 mb-10 shadow-soft"
                         >
                             <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-                            <span className="tracking-wide">Trusted by 10,000+ Students</span>
+                            <span>Trusted by 10,000+ Students</span>
                         </motion.div>
 
                         <motion.h1

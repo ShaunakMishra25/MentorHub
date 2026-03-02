@@ -362,7 +362,7 @@ export default function VerificationPage() {
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-slate-600 transition-all hover:bg-slate-100"
+                    className="flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-slate-600 transition-all hover:text-slate-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back

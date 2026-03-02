@@ -12,14 +12,28 @@ export default function UpcomingMeetingBanner() {
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            // Match the MobileStickyCTA threshold (500px)
-            setIsScrolled(window.scrollY > 500);
+        // Create a sentinel element at 500px from top to match MobileStickyCTA
+        const sentinel = document.createElement('div');
+        sentinel.style.position = 'absolute';
+        sentinel.style.top = '500px';
+        sentinel.style.height = '1px';
+        sentinel.style.width = '100%';
+        sentinel.style.pointerEvents = 'none';
+        document.body.prepend(sentinel);
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsScrolled(!entry.isIntersecting);
+            },
+            { threshold: [1] }
+        );
+
+        observer.observe(sentinel);
+
+        return () => {
+            observer.disconnect();
+            sentinel.remove();
         };
-        window.addEventListener("scroll", handleScroll);
-        // Check initial state
-        handleScroll();
-        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     // Hide if not signed in or still loading (prevents flash)
@@ -80,9 +94,10 @@ export default function UpcomingMeetingBanner() {
                 bg-gradient-to-r from-blue-600 to-indigo-700 text-white 
                 shadow-xl sm:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] 
                 rounded-2xl sm:rounded-none border border-white/10 sm:border-0 
-                overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                overflow-hidden transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
                 ${isScrolled ? 'bottom-[88px] sm:bottom-0' : 'bottom-3 sm:bottom-0'}
             `}
+            style={{ transform: 'translateZ(0)' }}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
                 {/* Subtle shine effect */}

@@ -6,13 +6,14 @@ import { ArrowRight } from 'lucide-react'
 
 export default function HowItWorksSection() {
     return (
-        <section className="py-24 bg-white relative">
+        <section id="how-it-works" className="py-24 bg-white relative">
             <div className="container mx-auto px-4 max-w-6xl">
                 <div className="text-center mb-20 max-w-3xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
+                        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                         className="inline-block mb-4"
                     >
                         <span className="text-blue-700 font-bold tracking-wider uppercase text-xs px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
@@ -23,7 +24,7 @@ export default function HowItWorksSection() {
                     <motion.h2
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
+                        transition={{ delay: 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                         viewport={{ once: true }}
                         className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 leading-[1.1]"
                     >
@@ -32,7 +33,7 @@ export default function HowItWorksSection() {
                     <motion.p
                         initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.16, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                         viewport={{ once: true }}
                         className="mt-6 text-lg text-gray-600 leading-relaxed"
                     >
@@ -47,14 +48,14 @@ export default function HowItWorksSection() {
                     {howItWorksSteps.map((step, index) => (
                         <motion.div
                             key={step.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.2 }}
+                            transition={{ delay: index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                             viewport={{ once: true }}
                             className="relative flex flex-col items-center text-center group"
                         >
-                            <div className="w-32 h-32 rounded-full bg-white border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex items-center justify-center text-blue-600 mb-8 z-10 group-hover:scale-105 transition-transform duration-300 relative">
-                                <div className="absolute inset-0 bg-blue-50/50 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300 rounded-full" />
+                            <div className="w-32 h-32 rounded-full bg-white border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex items-center justify-center text-blue-600 mb-8 z-10 transition-transform duration-200 relative" style={{ willChange: 'transform' }}>
+                                <div className="absolute inset-0 bg-blue-50/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full" />
                                 <step.icon className="w-12 h-12 relative z-10" strokeWidth={1.5} />
                                 <div className="absolute -bottom-2 bg-gray-900 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
                                     Step 0{index + 1}

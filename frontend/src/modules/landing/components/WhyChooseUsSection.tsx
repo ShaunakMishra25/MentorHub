@@ -64,7 +64,7 @@ export default function WhyChooseUsSection() {
     const rightFeatures = [features[1], features[3]];
 
     return (
-        <section ref={containerRef} className="relative bg-white py-24 md:py-32 overflow-hidden">
+        <section id="about" ref={containerRef} className="relative bg-white py-24 md:py-32 overflow-hidden">
             {/* Background elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] bg-blue-50/60 rounded-full blur-[100px] mix-blend-multiply" />
@@ -169,7 +169,7 @@ function FeatureItem({ feature, align }: { feature: Feature, align: 'left' | 'ri
         <div className={`flex flex-col lg:flex-row gap-5 items-center lg:items-start text-center lg:text-left ${!isLeft ? 'lg:flex-row-reverse lg:text-right' : ''}`}>
             <div className="flex-shrink-0 relative group">
                 <div className="absolute inset-0 bg-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
-                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-sm flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-sm flex items-center justify-center text-blue-600 transition-transform duration-200" style={{ willChange: 'transform' }}>
                     <Icon className="w-7 h-7" strokeWidth={1.5} />
                 </div>
             </div>

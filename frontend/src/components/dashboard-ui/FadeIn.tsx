@@ -15,9 +15,9 @@ interface FadeInProps {
 export default function FadeIn({
     children,
     delay = 0,
-    duration = 0.6,
+    duration = 0.4,
     className = "",
-    yOffset = 20,
+    yOffset = 16,
     threshold = 0.1,
     onComplete,
 }: FadeInProps) {
@@ -62,7 +62,7 @@ export default function FadeIn({
                 transitionProperty: "opacity, transform",
                 transitionDuration: `${duration}s`,
                 transitionDelay: `${delay}s`,
-                transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
             }}
         >
             {children}

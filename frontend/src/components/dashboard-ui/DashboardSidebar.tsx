@@ -106,8 +106,8 @@ export default function DashboardSidebar({
                     className={`px-5 py-6 flex items-center ${isCollapsed ? "md:justify-center md:px-2" : ""}`}
                 >
                     <Image
-                        src="/logo.png"
-                        alt="MentoMania Logo"
+                        src="/mentomaniaonlylogo.png"
+                        alt="MentoMania"
                         width={48}
                         height={48}
                         className="w-10 h-10 sm:w-12 sm:h-12 object-contain shrink-0"

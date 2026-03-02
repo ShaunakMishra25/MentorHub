@@ -15,7 +15,7 @@ interface Testimonial {
     };
     mentee: {
         name: string;
-        role: string; // e.g., "Cleared UPSC 2023"
+        role: string; 
         image: string;
     };
     review: string;
@@ -84,17 +84,18 @@ export default function TestimonialsSection() {
             <div className="container mx-auto px-4 max-w-6xl relative z-10">
                 <div className="text-center mb-20">
                     <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
+                        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                         className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1]"
                     >
                         Success Stories
                     </motion.h2>
                     <motion.p
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
+                        transition={{ delay: 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                         viewport={{ once: true }}
                         className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
                     >
@@ -102,7 +103,6 @@ export default function TestimonialsSection() {
                     </motion.p>
                 </div>
 
-                {/* Mobile: Horizontal Scroll | Desktop: Grid */}
                 <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
                     <div
                         className="flex overflow-x-auto pb-8 sm:pb-0 sm:overflow-visible space-x-6 sm:space-x-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 snap-x snap-mandatory no-scrollbar"
@@ -110,9 +110,9 @@ export default function TestimonialsSection() {
                         {testimonials.map((t, i) => (
                             <motion.div
                                 key={t.id}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 16 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
+                                transition={{ delay: i * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                                 viewport={{ once: true }}
                                 className="h-full min-w-[340px] sm:min-w-0 snap-center flex flex-col"
                             >

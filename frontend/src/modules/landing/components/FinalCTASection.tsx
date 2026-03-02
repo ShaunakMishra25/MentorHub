@@ -7,12 +7,12 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 
 export default function FinalCTASection() {
     return (
-        <section className="py-24 md:py-32 px-4">
+        <section id="final-cta" className="py-24 md:py-32 px-4">
             <div className="container mx-auto">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                     viewport={{ once: true }}
                     className="relative rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 px-6 py-20 sm:px-16 sm:py-28 text-center shadow-[0_30px_60px_-15px_rgba(59,130,246,0.3)] ring-1 ring-white/20"
                 >
@@ -40,13 +40,13 @@ export default function FinalCTASection() {
 
                         <div className="flex flex-col sm:flex-row gap-5 justify-center pt-6">
                             <Link href="/mentors">
-                                <Button size="lg" className="h-14 px-8 text-lg bg-white text-blue-700 hover:bg-blue-50 hover:scale-105 transition-all w-full sm:w-auto font-bold shadow-xl shadow-blue-900/10 border border-white">
+                                <Button size="lg" className="h-14 px-8 text-lg bg-white text-blue-700 hover:bg-blue-50 transition-transform active:scale-[0.98] w-full sm:w-auto font-bold shadow-xl shadow-blue-900/10 border border-white">
                                     Find Your Mentor
                                     <ArrowRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </Link>
-                            <Link href="/apply-mentor">
-                                <Button size="lg" variant="outline" className="bg-transparent h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 hover:border-white/50 hover:text-white w-full sm:w-auto font-bold backdrop-blur-sm">
+                            <Link href="/onboarding/profile/basic-info">
+                                <Button size="lg" variant="outline" className="bg-transparent h-14 px-8 text-lg border-white/30 text-white hover:bg-white/10 hover:border-white/50 hover:text-white transition-transform active:scale-[0.98] w-full sm:w-auto font-bold backdrop-blur-sm">
                                     Become a Mentor
                                 </Button>
                             </Link>

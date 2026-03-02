@@ -144,18 +144,14 @@ export default function AdminReviewApplication() {
             {/* Sidebar Navigation */}
             <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-transform duration-300 ease-in-out md:static md:translate-x-0 md:flex flex-shrink-0 ${isMenuOpen ? "translate-x-0 flex" : "-translate-x-full hidden md:flex"}`}>
                 <div className="flex items-center justify-between gap-3 p-6">
-                    <Link href="/" className="flex items-center -ml-2" onClick={() => setIsMenuOpen(false)}>
-                        <div className="w-12 h-12 relative -mt-2">
-                            <Image
-                                src="/logo.png"
-                                alt="MentoMania Logo"
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-                        <span className="font-bold text-2xl text-slate-900 dark:text-white -ml-1.5 pt-1">
-                            ento<span className="text-blue-600">Mania</span>
-                        </span>
+                    <Link href="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
+                        <Image
+                            src="/mentomanialogo.png"
+                            alt="MentoMania"
+                            width={200}
+                            height={44}
+                            className="h-10 w-auto object-contain"
+                        />
                     </Link>
                     <button
                         onClick={() => setIsMenuOpen(false)}

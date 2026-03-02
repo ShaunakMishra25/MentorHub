@@ -14,28 +14,23 @@ export function SWRProvider({ children }: SWRProviderProps) {
         // Global SWR configuration
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
-        dedupingInterval: 60000, // 1 minute
+        dedupingInterval: 60000,
         errorRetryCount: 2,
         errorRetryInterval: 5000,
         shouldRetryOnError: (error) => {
-          // Don't retry on 404 errors (user not found, etc.)
           if (error?.status === 404) return false;
-          // Don't retry on 401/403 (auth errors)
           if (error?.status === 401 || error?.status === 403) return false;
           return true;
         },
         
-        // Global fetcher
         fetcher: async (url: string) => {
           const res = await fetch(url);
           if (!res.ok) {
-            // Try to get error details
             let errorMsg = "An error occurred while fetching the data.";
             try {
               const data = await res.json();
               if (data?.msg) errorMsg = data.msg;
             } catch {
-              // Ignore parse errors
             }
             const error = new Error(errorMsg) as Error & { status: number };
             error.status = res.status;
@@ -44,9 +39,7 @@ export function SWRProvider({ children }: SWRProviderProps) {
           return res.json();
         },
         
-        // Don't log errors in production for expected cases
         onError: (error, key) => {
-          // Suppress expected errors
           if (error?.message === "User not found") return;
           if (error?.status === 404) return;
           
