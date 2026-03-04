@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { MentorOnboardingData } from "@/shared/lib/types/mentor-onboarding-data";
 
 type OnboardingContextType = {
@@ -17,21 +18,46 @@ export function MentorOnboardingProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // 🔹 Load initial data from localStorage
-  const [data, setData] = useState<MentorOnboardingData>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      const stored = localStorage.getItem("mentorOnboarding");
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
+  const { user, isLoaded } = useUser();
+  const storageKey = user?.id ? `mentorOnboarding_${user.id}` : null;
 
-  // 🔹 Persist on every change
+  // Start with empty state — populated once we know the user
+  const [data, setData] = useState<MentorOnboardingData>({});
+
+  // Track the last userId so we can detect user switches
+  const lastUserIdRef = useRef<string | null>(null);
+
+  // 🔹 Load the correct user's data whenever the authenticated user changes
   useEffect(() => {
-    localStorage.setItem("mentorOnboarding", JSON.stringify(data));
-  }, [data]);
+    if (!isLoaded) return;
+
+    const currentUserId = user?.id ?? null;
+
+    // If the user switched (or signed in for the first time), reset in-memory state
+    if (currentUserId !== lastUserIdRef.current) {
+      lastUserIdRef.current = currentUserId;
+
+      if (currentUserId && typeof window !== "undefined") {
+        try {
+          // Remove the old unscoped key if it still exists (migration cleanup)
+          localStorage.removeItem("mentorOnboarding");
+          const stored = localStorage.getItem(`mentorOnboarding_${currentUserId}`);
+          setData(stored ? JSON.parse(stored) : {});
+        } catch {
+          setData({});
+        }
+      } else {
+        // Signed out — clear in-memory state, don't touch storage
+        setData({});
+      }
+    }
+  }, [user?.id, isLoaded]);
+
+  // 🔹 Persist on every change, scoped to the current user
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") return;
+    localStorage.setItem(storageKey, JSON.stringify(data));
+  }, [data, storageKey]);
 
   const updateData = (stepData: Partial<MentorOnboardingData>) => {
     setData((prev) => ({
@@ -42,7 +68,9 @@ export function MentorOnboardingProvider({
 
   const resetData = () => {
     setData({});
-    localStorage.removeItem("mentorOnboarding");
+    if (storageKey && typeof window !== "undefined") {
+      localStorage.removeItem(storageKey);
+    }
   };
 
   return (

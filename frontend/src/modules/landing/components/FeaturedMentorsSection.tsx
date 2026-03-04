@@ -41,7 +41,7 @@ export default function FeaturedMentorsSection() {
                         <motion.h2
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
+                            transition={{ delay: 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                             viewport={{ once: true }}
                             className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 leading-[1.1]"
                         >
@@ -50,7 +50,7 @@ export default function FeaturedMentorsSection() {
                         <motion.p
                             initial={{ opacity: 0, y: 10 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
+                            transition={{ delay: 0.16, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                             viewport={{ once: true }}
                             className="mt-6 text-lg text-gray-600 max-w-2xl leading-relaxed"
                         >
@@ -89,9 +89,9 @@ export default function FeaturedMentorsSection() {
                             featuredMentors.map((mentor, index) => (
                                 <motion.div
                                     key={mentor.id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 16 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1 }}
+                                    transition={{ delay: index * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                                     viewport={{ once: true }}
                                     className="h-full min-w-[280px] sm:min-w-0 snap-center first:pl-2 last:pr-2 sm:first:pl-0 sm:last:pr-0"
                                 >

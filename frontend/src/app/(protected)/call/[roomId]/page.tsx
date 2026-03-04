@@ -35,7 +35,7 @@ export default function CallPage({ params }: { params: Promise<{ roomId: string 
 
   const handleEndCall = () => {
     if (confirm("Are you sure you want to end the call?")) {
-      router.push("/dashboard/student/dashboard");
+      router.push("/profile");
     }
   };
 

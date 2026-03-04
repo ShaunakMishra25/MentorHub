@@ -62,10 +62,10 @@ export async function POST(req: Request) {
                 email: email,
                 firstName: data.first_name,
                 lastName: data.last_name,
-                username: data.username,
+                username: data.username || undefined,
                 imageUrl: data.image_url,
                 role: data.role,
-                name: `${data.first_name ?? ""} ${data.last_name ?? ""}`,
+                name: `${data.first_name ?? ""} ${data.last_name ?? ""}`.trim(),
             });
         }
 
@@ -76,9 +76,9 @@ export async function POST(req: Request) {
                     email: email,
                     firstName: data.first_name,
                     lastName: data.last_name,
-                    username: data.username,
+                    ...(data.username ? { username: data.username } : {}),
                     imageUrl: data.image_url,
-                    name: `${data.first_name ?? ""} ${data.last_name ?? ""}`,
+                    name: `${data.first_name ?? ""} ${data.last_name ?? ""}`.trim(),
                 }
             );
         }

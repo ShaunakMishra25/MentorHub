@@ -7,10 +7,12 @@ import FAQSection from '@/modules/landing/components/FAQSection';
 import FinalCTASection from '@/modules/landing/components/FinalCTASection';
 import MobileStickyCTA from '@/modules/landing/components/MobileStickyCTA';
 import Footer from '@/shared/ui/Footer';
+import UpcomingMeetingBanner from '@/shared/ui/UpcomingMeetingBanner';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white selection:bg-blue-100 selection:text-blue-900 pb-20 sm:pb-0">
+      <UpcomingMeetingBanner />
       <HeroSection />
       <FeaturedMentorsSection />
       <TestimonialsSection />

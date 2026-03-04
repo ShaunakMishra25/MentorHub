@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { MentorProfile } from "@/app/(public)/mentors/mock";
-import { useRouter } from "next/navigation";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { fetchMentorById } from "@/shared/lib/api/mentors";
 import { Skeleton } from "@/shared/ui/skeleton";
 import {
@@ -45,10 +45,11 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
 
   // Form State for Step 2
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  // TEMPORARILY DISABLED: Firebase OTP verification - set to true to bypass
+  const [isPhoneVerified, setIsPhoneVerified] = useState(true);
   const [couponCode, setCouponCode] = useState("");
 
-  // Firebase OTP State
+  // Firebase OTP State - TEMPORARILY DISABLED
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -56,9 +57,27 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Flag to control OTP feature - set to false to disable OTP verification
+  const ENABLE_OTP_VERIFICATION = false;
+
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoaded, isSignedIn, user } = useUser();
-  const clerk = useClerk();
+
+  // --- Restore selections that survived the sign-in round-trip ---
+  useEffect(() => {
+    if (!isLoaded) return;
+    const date = searchParams.get("date");
+    const slot = searchParams.get("slot");
+    if (date) setSelectedDate(date);
+    if (slot) setSelectedSlot(slot);
+    // If user just returned from sign-in with pre-selected values, advance automatically
+    if (isSignedIn && date && slot) {
+      setStep(2);
+    }
+    // only run once on mount — intentionally no full dep array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!mentor) {
@@ -77,8 +96,11 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
     }
   }, [mentor, mentorId]);
 
-  // Initialize Recaptcha
+  // Initialize Recaptcha - TEMPORARILY DISABLED
   useEffect(() => {
+    // Skip Recaptcha initialization when OTP verification is disabled
+    if (!ENABLE_OTP_VERIFICATION) return;
+
     if (step === 2 && typeof window !== 'undefined' && !window.recaptchaVerifier) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
@@ -94,51 +116,50 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
         console.error("Recaptcha initialization failed", err);
       }
     }
-  }, [step]);
+  }, [step, ENABLE_OTP_VERIFICATION]);
 
-  // Calendar logic
+  // Calendar & real-session logic
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  const slots = [
-    "11:00 AM IST", "11:25 AM IST", "11:50 AM IST",
-    "12:15 PM IST", "12:40 PM IST", "01:05 PM IST",
-    "01:30 PM IST", "01:55 PM IST", "02:20 PM IST",
-  ];
-
-  /* -------- Calendar logic -------- */
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const calendarCells = Array.from({ length: firstDayOfMonth + daysInMonth });
-
-  const monthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "short" }).toUpperCase();
-  const fullMonthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" });
-
-  const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
-
-  const handlePrevMonth = () => {
-    if (isCurrentMonth) return;
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
+  // Helper to check if a session is in the past
+  const isSessionPast = (date: string | Date, startTime: string) => {
+    try {
+      const dateStr = new Date(date).toISOString().split("T")[0]; // YYYY-MM-DD
+      const [year, month, day] = dateStr.split("-").map(Number);
+      const [hours, minutes] = startTime.split(":").map(Number);
+      const sessionDate = new Date(year, month - 1, day, hours, minutes);
+      return sessionDate <= today;
+    } catch {
+      return false;
     }
-    setSelectedDate(null);
-    setSelectedSlot(null);
   };
 
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
-    setSelectedDate(null);
-    setSelectedSlot(null);
-  };
+  // Derive availability from mentor's upcomingSessions
+  const sessions = mentor?.upcomingSessions || [];
+
+  // YYYY-MM-DD dates that have at least one unbooked future session
+  const availableDates = new Set(
+    sessions
+      .filter(s => !s.isBooked && !isSessionPast(s.date, s.startTime))
+      .map(s => new Date(s.date).toISOString().split("T")[0])
+  );
+
+  // All future dates (booked or not) — used for calendar dot indicators
+  const datesWithSessions = new Set(
+    sessions
+      .filter(s => !isSessionPast(s.date, s.startTime))
+      .map(s => new Date(s.date).toISOString().split("T")[0])
+  );
+
+  // Sorted slots for the currently selected date (only future slots)
+  const slotsForSelectedDate = selectedDate
+    ? sessions
+      .filter(s => new Date(s.date).toISOString().split("T")[0] === selectedDate && !isSessionPast(s.date, s.startTime))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    : [];
+
 
   const canContinueStep1 = Boolean(selectedDate && selectedSlot);
 
@@ -146,9 +167,8 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
     if (!selectedDate || !selectedSlot || !isLoaded || !mentor) return;
 
     if (!isSignedIn) {
-      clerk.openSignIn({
-        redirectUrl: `/book/${mentor.id}`, // Stay on page after sign-in? Or maybe handle params
-      });
+      const bookingUrl = `/book/${mentor.id}?date=${encodeURIComponent(selectedDate)}&slot=${encodeURIComponent(selectedSlot)}`;
+      router.push(`/sign-in?redirect=${encodeURIComponent(bookingUrl)}`);
       return;
     }
 
@@ -373,98 +393,139 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
               </div>
 
               {/* Month Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="text-base font-bold text-gray-800 tracking-wide">
-                  {fullMonthName} {currentYear}
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    onClick={handlePrevMonth}
-                    disabled={isCurrentMonth}
-                    className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}`}
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleNextMonth}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+              {(() => {
+                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const calendarCells = Array.from({ length: firstDayOfMonth + daysInMonth });
+                const monthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "short" }).toUpperCase();
+                const fullMonthName = new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" });
+                const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
 
-              {/* Month Abbr Title */}
-              <div className="mb-4 text-xs font-bold text-gray-500 tracking-wider">
-                {monthName}
-              </div>
+                const handlePrevMonth = () => {
+                  if (isCurrentMonth) return;
+                  if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); }
+                  else setCurrentMonth(m => m - 1);
+                  setSelectedDate(null); setSelectedSlot(null);
+                };
+                const handleNextMonth = () => {
+                  if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); }
+                  else setCurrentMonth(m => m + 1);
+                  setSelectedDate(null); setSelectedSlot(null);
+                };
 
-              {/* Calendar Grid */}
-              <div>
-                {/* Weekdays */}
-                <div className="grid grid-cols-7 mb-2">
-                  {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
-                    <div key={d} className="text-center text-xs text-gray-400 py-1">
-                      {d}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-y-2 gap-x-1">
-                  {calendarCells.map((_, index) => {
-                    const day = index - firstDayOfMonth + 1;
-                    if (day < 1 || day > daysInMonth) return <div key={index} />;
-
-                    const dateObj = new Date(currentYear, currentMonth, day);
-                    const isPast = dateObj < new Date(today.setHours(0, 0, 0, 0));
-                    const dateValue = dateObj.toISOString().split("T")[0];
-                    const isSelected = selectedDate === dateValue;
-
-                    return (
-                      <div key={index} className="flex justify-center">
-                        <motion.button
-                          disabled={isPast}
-                          onClick={() => {
-                            setSelectedDate(dateValue);
-                            setSelectedSlot(null);
-                          }}
-                          className={`w-9 h-9 flex items-center justify-center text-sm rounded-full transition-all duration-200
-                                                    ${isSelected
-                              ? "bg-blue-100 text-blue-600 font-bold"
-                              : isPast
-                                ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-50"
-                            }`}
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <span className="text-base font-bold text-gray-800 tracking-wide">
+                        {fullMonthName} {currentYear}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={handlePrevMonth}
+                          disabled={isCurrentMonth}
+                          className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${isCurrentMonth ? 'text-gray-300' : 'text-gray-600'}`}
                         >
-                          {day}
-                        </motion.button>
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={handleNextMonth}
+                          className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
+
+                    {/* Month Abbr */}
+                    <div className="mb-4 text-xs font-bold text-gray-500 tracking-wider">{monthName}</div>
+
+                    {/* Calendar Grid */}
+                    <div>
+                      <div className="grid grid-cols-7 mb-2">
+                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
+                          <div key={d} className="text-center text-xs text-gray-400 py-1">{d}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+                        {calendarCells.map((_: unknown, index: number) => {
+                          const day = index - firstDayOfMonth + 1;
+                          if (day < 1 || day > daysInMonth) return <div key={index} />;
+
+                          const dateObj = new Date(currentYear, currentMonth, day);
+                          const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+                          const isPast = dateObj < todayMidnight;
+                          const dateValue = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                          const isSelected = selectedDate === dateValue;
+                          const hasAvailable = availableDates.has(dateValue);
+                          const hasSessions = datesWithSessions.has(dateValue);
+                          const isDisabled = isPast || !hasAvailable;
+
+                          return (
+                            <div key={index} className="flex flex-col items-center">
+                              <motion.button
+                                disabled={isDisabled}
+                                onClick={() => { setSelectedDate(dateValue); setSelectedSlot(null); }}
+                                className={`w-9 h-9 flex items-center justify-center text-sm rounded-full transition-all duration-200
+                                  ${isSelected
+                                    ? "bg-blue-600 text-white font-bold shadow-md"
+                                    : isDisabled
+                                      ? isPast ? "text-gray-300 cursor-not-allowed" : "text-gray-400 cursor-not-allowed opacity-50"
+                                      : hasAvailable
+                                        ? "text-gray-800 hover:bg-blue-50 hover:text-blue-600 font-semibold"
+                                        : "text-gray-400"
+                                  }`}
+                              >
+                                {day}
+                              </motion.button>
+                              {/* Green dot = has available sessions; grey dot = all booked */}
+                              {hasSessions && !isPast && (
+                                <div className={`w-1 h-1 rounded-full mt-0.5 ${hasAvailable ? "bg-green-400" : "bg-gray-300"}`} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Time Slots */}
-              <div className="mt-8">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Now select time</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {slots.map((slot) => (
-                    <motion.button
-                      key={slot}
-                      disabled={!selectedDate}
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`py-2.5 px-3 text-xs font-medium rounded-lg border transition-all duration-200
-                                            ${selectedSlot === slot
-                          ? "border-blue-600 bg-blue-50 text-blue-700"
-                          : !selectedDate
-                            ? "border-gray-100 text-gray-300 cursor-not-allowed"
-                            : "border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900"
-                        }`}
-                    >
-                      {slot}
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  {selectedDate
+                    ? slotsForSelectedDate.length > 0
+                      ? "Select a time slot"
+                      : "No slots available for this date"
+                    : "Select a date to see available slots"}
+                </h3>
+                {slotsForSelectedDate.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {slotsForSelectedDate.map(session => {
+                      const isBooked = session.isBooked;
+                      const isSelected = selectedSlot === session.startTime;
+                      return (
+                        <motion.button
+                          key={session._id || session.startTime}
+                          disabled={isBooked}
+                          onClick={() => !isBooked && setSelectedSlot(session.startTime)}
+                          className={`py-2.5 px-3 text-xs font-medium rounded-lg border transition-all duration-200 flex flex-col items-start
+                            ${isSelected
+                              ? "border-blue-600 bg-blue-50 text-blue-700"
+                              : isBooked
+                                ? "border-gray-100 text-gray-300 cursor-not-allowed opacity-40 line-through"
+                                : "border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50"
+                            }`}
+                        >
+                          <span>{session.startTime} – {session.endTime}</span>
+                          <span className={`text-[10px] mt-0.5 ${isBooked ? "text-red-300" : "text-gray-400"}`}>
+                            {isBooked ? "Booked" : `${session.sessionDuration} min`}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Continue Button */}
@@ -540,33 +601,36 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
                     <div className="relative flex-1">
                       <input
                         type="tel"
-                        placeholder="Enter phone number"
+                        placeholder="Enter phone number (optional)"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        disabled={isOtpSent || isPhoneVerified} // Disable when OTP is sent or verified
-                        className="w-full pl-4 pr-32 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:bg-gray-50"
+                        disabled={ENABLE_OTP_VERIFICATION && (isOtpSent || isPhoneVerified)} // Disable when OTP is sent or verified (only if OTP enabled)
+                        className="w-full pl-4 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all disabled:bg-gray-50"
                       />
 
-                      {/* Recaptcha Container */}
-                      <div id="recaptcha-container"></div>
+                      {/* Recaptcha Container - Only render when OTP is enabled */}
+                      {ENABLE_OTP_VERIFICATION && <div id="recaptcha-container"></div>}
 
-                      <button
-                        disabled={phoneNumber.length < 10 || isPhoneVerified || isSendingOtp || isOtpSent}
-                        onClick={handleSendOtp}
-                        className={`absolute right-1 top-1 bottom-1 px-3 rounded-md text-xs font-medium transition-colors flex items-center
-                                        ${isPhoneVerified
-                            ? "bg-green-100 text-green-700 cursor-default"
-                            : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"}`}
-                      >
-                        {isSendingOtp ? <Loader2 className="w-3 h-3 animate-spin" /> : isPhoneVerified ? "Verified" : isOtpSent ? "OTP Sent" : "Send OTP"}
-                      </button>
+                      {/* OTP Button - Only show when OTP verification is enabled */}
+                      {ENABLE_OTP_VERIFICATION && (
+                        <button
+                          disabled={phoneNumber.length < 10 || isPhoneVerified || isSendingOtp || isOtpSent}
+                          onClick={handleSendOtp}
+                          className={`absolute right-1 top-1 bottom-1 px-3 rounded-md text-xs font-medium transition-colors flex items-center
+                                          ${isPhoneVerified
+                              ? "bg-green-100 text-green-700 cursor-default"
+                              : "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"}`}
+                        >
+                          {isSendingOtp ? <Loader2 className="w-3 h-3 animate-spin" /> : isPhoneVerified ? "Verified" : isOtpSent ? "OTP Sent" : "Send OTP"}
+                        </button>
+                      )}
                     </div>
                   </div>
                   {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
                 </div>
 
-                {/* OTP Input - Only show if OTP sent and not verified */}
-                {isOtpSent && !isPhoneVerified && (
+                {/* OTP Input - Only show if OTP sent and not verified (and OTP is enabled) */}
+                {ENABLE_OTP_VERIFICATION && isOtpSent && !isPhoneVerified && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -627,10 +691,10 @@ export default function BookingClient({ mentor: initialMentor, mentorId }: Props
                   Back
                 </button>
                 <button
-                  disabled={!isPhoneVerified}
+                  disabled={ENABLE_OTP_VERIFICATION && !isPhoneVerified}
                   onClick={handlePayment}
                   className={`flex-1 py-3.5 rounded-xl font-semibold text-sm shadow-md transition-colors flex items-center justify-center
-                             ${isPhoneVerified
+                             ${!ENABLE_OTP_VERIFICATION || isPhoneVerified
                       ? "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg cursor-pointer"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                 >

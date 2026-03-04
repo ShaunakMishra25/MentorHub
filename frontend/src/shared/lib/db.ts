@@ -30,16 +30,16 @@ export const connectDB = async () => {
         };
 
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-            console.log("MongoDB Connected");
             return mongoose;
         });
     }
 
     try {
         cached.conn = await cached.promise;
-        console.log("MongoDB connection established");
     } catch (e) {
-        console.error("MongoDB connection failed:", e);
+        if (process.env.NODE_ENV === 'development') {
+            console.error("MongoDB connection failed:", e);
+        }
         cached.promise = null;
         throw e;
     }

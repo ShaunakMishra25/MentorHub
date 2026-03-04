@@ -32,6 +32,12 @@ export type MentorExpertiseInfo = {
   subjects: string[];
   specializations: string;
   exams?: MentorExamItem[];
+  // Additional fields from expertise form
+  examExpertise?: string;
+  currentRole?: string;
+  rankOrScore?: string;
+  yearsOfExperience?: string;
+  keyHighlights?: string;
 };
 
 export type MentorAvailabilityInfo = {
@@ -45,10 +51,17 @@ export type MentorPricingInfo = {
   isFreeTrialEnabled: boolean;
 };
 
+export type MentorVerificationInfo = {
+  idType: string;
+  idNumber: string;
+  documentFileName?: string | null; // File name stored for reference only
+};
+
 export type MentorOnboardingData = {
   basicInfo?: MentorBasicInfo;
   professionalInfo?: MentorProfessionalInfo;
   expertise?: MentorExpertiseInfo;
   availability?: MentorAvailabilityInfo;
   pricing?: MentorPricingInfo;
+  verification?: MentorVerificationInfo;
 };

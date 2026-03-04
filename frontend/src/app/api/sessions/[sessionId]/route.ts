@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
     const { sessionId } = await params;
+    const authHeader = request.headers.get("Authorization");
 
-    // Get session from global storage
-    const sessions = (global as any).sessions || new Map();
-    const session = sessions.get(sessionId);
-
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Session not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      session,
+    const response = await fetch(`${BACKEND_URL}/api/booking/${sessionId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
     });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("Error fetching session:", error);
     return NextResponse.json(

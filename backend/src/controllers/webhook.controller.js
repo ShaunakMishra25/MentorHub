@@ -14,6 +14,30 @@ export const handleClerkWebhook = async (req, res) => {
 
     const clerkId = data.id;
 
+    if (type === "user.created") {
+      try {
+        const email = data.email_addresses && data.email_addresses.length > 0
+          ? data.email_addresses[0].email_address
+          : "";
+        const name = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+        const imageUrl = data.image_url;
+
+        const newUser = new User({
+          clerkId,
+          email,
+          name,
+          username: data.username || undefined,
+          imageUrl,
+          role: data.public_metadata?.role || "student", // Default to student unless specified
+        });
+        await newUser.save();
+        console.log(`User created successfully with clerkId: ${clerkId}`);
+      } catch (err) {
+        console.error("Error creating user from webhook:", err);
+        return res.status(500).json({ error: "Failed to create user in database" });
+      }
+    }
+
     if (type === "user.updated") {
       const role = data.public_metadata?.role;
 
@@ -23,7 +47,7 @@ export const handleClerkWebhook = async (req, res) => {
         if (!user) {
           return res.status(404).json({ error: "User not found" });
         }
-        
+
         if (user.role === "mentor") {
           return res.status(200).json({ message: "Already mentor" });
         }

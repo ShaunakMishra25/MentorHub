@@ -183,7 +183,6 @@ body {
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
@@ -247,17 +246,17 @@ body {
     box-shadow: var(--shadow-mento-hover);
   }
 
-  /* ── Card interaction helper (transition only — no colour) ───────── */
   .card-modern {
-    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-/* ── Keyframes from final_website/index.css ───────────────────────────────── */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(16px);
   }
 
   to {
@@ -269,7 +268,7 @@ body {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
 
   to {
@@ -282,11 +281,11 @@ body {
 
   0%,
   100% {
-    transform: translate(0, 0);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate(8px, -8px);
+    transform: translate3d(0, -8px, 0);
   }
 }
 
@@ -294,11 +293,11 @@ body {
 
   0%,
   100% {
-    transform: translate(0, 0);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate(-6px, 6px);
+    transform: translate3d(0, 6px, 0);
   }
 }
 
@@ -307,32 +306,29 @@ body {
   0%,
   100% {
     opacity: 0.4;
-    transform: scale(1);
   }
 
   50% {
     opacity: 0.8;
-    transform: scale(1.1);
   }
 }
 
 @keyframes shimmer {
   0% {
-    background-position: 200% 0;
+    transform: translateX(100%);
   }
 
   100% {
-    background-position: -200% 0;
+    transform: translateX(-100%);
   }
 }
 
-/* ── Animation utility classes ─────────────────────────────────────────────── */
 .animate-fadeIn {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .animate-slideUp {
-  animation: slideUp 0.4s ease-out forwards;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .animate-float {
@@ -348,12 +344,70 @@ body {
 }
 
 .animate-shimmer {
-  animation: shimmer 3s ease-in-out infinite;
+  animation: shimmer 3s linear infinite;
 }
 
-/* ── Global focus ring using mento primary ─────────────────────────────────── */
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--color-mento-600);
   outline-offset: 2px;
+}
+
+button,
+a[href],
+[role="button"],
+input,
+select,
+textarea {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@font-face {
+  font-display: swap;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+nav[class*="fixed"],
+[class*="sticky"],
+header[class*="fixed"] {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.carousel,
+.scroll-container,
+[class*="scroll-snap"] {
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.carousel > *,
+.scroll-container > *,
+[class*="scroll-snap"] > * {
+  scroll-snap-align: start;
 }

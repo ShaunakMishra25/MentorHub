@@ -33,6 +33,8 @@ export type MentorProfileNested = {
 /** Flat view used by UI components — populated by the API mapper */
 export type MentorProfile = {
   id: string;
+  /** MongoDB ObjectId - used for backend API calls */
+  mongoId?: string;
   name: string;
   profilePhoto?: string;
   profileImage?: string;
@@ -89,6 +91,17 @@ export type MentorProfile = {
 
   /** Raw nested mentorProfile from DB — available when data comes from the real API */
   mentorProfile?: MentorProfileNested;
+
+  /** Upcoming sessions from the mentor's availability schedule */
+  upcomingSessions?: {
+    _id?: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    sessionDuration: number;
+    isBooked: boolean;
+    bookedBy?: string | null;
+  }[];
 };
 
 export const mockMentors: Record<string, MentorProfile> = {

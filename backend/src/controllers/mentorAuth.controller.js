@@ -3,7 +3,7 @@ import { clerkClient } from "@clerk/clerk-sdk-node";
 
 export const becomeMentor = async (req, res) => {
   try {
-    const clerkId = req.auth.userId;
+    const clerkId = (typeof req.auth === "function" ? req.auth() : req.auth)?.userId;
 
     const {
       basicInfo,
@@ -30,12 +30,16 @@ export const becomeMentor = async (req, res) => {
       expertise,
       availability,
       pricing,
+      verification: {
+        isVerified: false,
+        applicationStatus: "pending",
+      }
     };
 
     await user.save();
 
     await clerkClient.users.updateUser(clerkId, {
-      publicMetadata: { role: "mentor"},
+      publicMetadata: { role: "mentor" },
     });
 
     res.status(200).json({

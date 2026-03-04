@@ -88,7 +88,7 @@ export default function SubmittedPage() {
                 {/* Action Buttons */}
                 <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                     <Link
-                        href="/dashboard/mentor"
+                        href="/mentor/dashboard"
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 sm:w-auto"
                     >
                         Go to Dashboard
